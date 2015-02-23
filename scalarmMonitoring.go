@@ -58,8 +58,8 @@ func main() {
 
 	//setup time values
 	var waitIndefinitely bool = (configData.ExitTimeoutSecs < 0)
-	var exitTimeout time.Duration = time.Duration(configData.ExitTimeoutSecs)*time.Second
-	var probeFrequencySecs = time.Duration(DEFAULT_PROBE_FREQ_SECS)*time.Second
+	var exitTimeout time.Duration = time.Duration(configData.ExitTimeoutSecs) * time.Second
+	var probeFrequencySecs = time.Duration(DEFAULT_PROBE_FREQ_SECS) * time.Second
 	if configData.ProbeFrequencySecs > 0 {
 		probeFrequencySecs = time.Duration(configData.ProbeFrequencySecs) * time.Second
 	}
@@ -79,6 +79,10 @@ func main() {
 		log.Fatal("Fatal: Unable to get experiment manager location")
 	}
 
+	//start heartbeating
+	hbchan := make(chan []string, 10)
+	go Heartbeat(experimentManagerConnector, configData.Infrastructures, hbchan)
+
 	//create infrastructure facades
 	infrastructureFacades := NewInfrastructureFacades()
 
@@ -88,8 +92,12 @@ func main() {
 		log.Printf("Starting main loop")
 
 		//check for config changes
-		configData.Infrastructures = AppendIfMissing(configData.Infrastructures, SignalHandler(infrastructuresChannel, errorChannel))
-		log.Printf("Current infrastructures: %v\n\n\n", configData.Infrastructures)
+		changed := false
+		configData.Infrastructures, changed = AppendIfMissing(configData.Infrastructures, SignalHandler(infrastructuresChannel, errorChannel))
+		if changed {
+			log.Printf("Current infrastructures: %v\n\n\n", configData.Infrastructures)
+			hbchan <- configData.Infrastructures
+		}
 
 		nonerrorSmCount = 0
 

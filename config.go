@@ -46,20 +46,25 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 	return &configData, nil
 }
 
-func innerAppendIfMissing(currentInfrastructures []string, newInfrastructure string) []string {
+func innerAppendIfMissing(currentInfrastructures []string, newInfrastructure string) ([]string, bool) {
 	for _, c := range currentInfrastructures {
 		if c == newInfrastructure {
-			return currentInfrastructures
+			return currentInfrastructures, false
 		}
 	}
-	return append(currentInfrastructures, newInfrastructure)
+	return append(currentInfrastructures, newInfrastructure), true
 }
 
-func AppendIfMissing(currentInfrastructures []string, newInfrastructures []string) []string {
+func AppendIfMissing(currentInfrastructures []string, newInfrastructures []string) ([]string, bool) {
+	changed := false
 	for _, n := range newInfrastructures {
-		currentInfrastructures = innerAppendIfMissing(currentInfrastructures, n)
+		change := false
+		currentInfrastructures, change = innerAppendIfMissing(currentInfrastructures, n)
+		if change {
+			changed = true
+		}
 	}
-	return currentInfrastructures
+	return currentInfrastructures, changed
 }
 
 func SignalCatcher(infrastructuresChannel chan []string, errorChannel chan error, configFile string) {

@@ -216,6 +216,10 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	return nil
 }
 
+func (emc *ExperimentManagerConnector) Ping(infrastructures []string) {
+	log.Printf("\n###\ninfrastructures: %v\n###\n", infrastructures)
+}
+
 func escape(input string) string {
 	output := strings.Replace(input, "\n", "\\n", -1)
 	output = strings.Replace(output, "\r", "\\r", -1)

@@ -1,11 +1,15 @@
-Scalarm Monitoring
+Monitoring Daemon 
 ============ 
+Contents 
+---------- 
+* monitoringDaemon - main monitoring daemon program
+* config - configuration for monitoring daemon
 
 Installation guide: 
 ---------------------- 
 Go 
 -- 
-To build and install monitoring you need to install go programming language. 
+To build and install monitoring daemon you need to install go programming language. 
 You can install it from official binary distribution: 
 
 https://golang.org/doc/install
@@ -22,49 +26,35 @@ Installation
 -------------- 
 You can download it directly from GitHub. You have to download it into your $GOPATH/src folder 
 ``` 
-git clone https://github.com/mpaciore/scalarm_monitoring
+git clone https://github.com/mpaciore/monitoring_daemon.git
 ``` 
 Now you can install monitoring: 
 ```` 
-go install scalarm_monitoring 
+go install monitoring_daemon/monitoringDaemon 
 ```` 
-This command will install monitoring in $GOPATH/bin. It's name will be scalarm_monitoring.
+This command will install monitoring daemon in $GOPATH/bin. It's name will be monitoringDaemon 
+Build Options 
+---------------- 
+With -tags option you can specify build options:  
+* no parameter: http server 
+* prod : https server 
+* certOff: disabling certificate checking for https 
 
+Paramters can be mixed. For example: 
+``` 
+go install -tags "prod certOff" monitoring_daemon/monitoringDaemon
+``` 
+Note: Use -a option in go install if you didn't change any files after previous install. 
 Config 
 -------- 
 The config folder contains single file config.json that contains required informations for monitor:
 
-* InformationServiceAddress - address of working Information Service
-* Login, Password - Scalarm credentials
-* Infrastructures - list of infrastructures monitor has to check for records
-* ScalarmCertificatePath - path to custom certificate (optional, by default looking in standard certificate directory)
-* ScalarmScheme - http or https (default)
-* InsecureSSL - should invalid certificates (eg. self-signed) be accepted
-* ProbeFrequencySecs (optional, default: 10) - number of delay in seconds between getting records and checking their state if last check was completed
-* ExitTimeout (optional, default: 0) - number of seconds to wait before exiting if there are no more records available; if this value is greater than 0, the minimal time to exit is ProbeFrequencySecs; if this values is less than 0, process continues work indefinitely (use with caution!)
+InformationServiceAddress - address of working Information Service
+Login, Password - Scalarm credentials
+Infrastructures - list of infrastructures monitor has to check for records
 
-Example config:
-
-```
-{
-	"InformationServiceAddress": "149.156.10.32:31034",
-	"Login": "login",
-	"Password": "password",
-	"Infrastructures": 
-	[
-		"qsub",
-		"qcg"
-	],
-	"ScalarmCertificatePath" : "cert.pem",
-	"ScalarmScheme" : "https",
-	"InsecureSSL" : true,
-	"ProbeFrequencySecs": 10,
-	"ExitTimeout": 0
-}
-```
-Example config can be found in config/config.json.
 
 Run 
 ---- 
-Before running program you have to copy contents of config folder to folder with executable of monitoring. By default it will be $GOPATH/bin 
+Before running program you have to copy contents of config folder to folder with executable of monitoring daemon. By default it will be $GOPATH/bin 
 

@@ -1,11 +1,11 @@
-Scalarm Monitoring
+Scalarm Workers Manager
 ============ 
 
 Installation guide: 
 ---------------------- 
 Go 
 -- 
-To build and install monitoring you need to install go programming language. 
+To build and install Scalarm Workers Manager you need to install go programming language. 
 You can install it from official binary distribution: 
 
 https://golang.org/doc/install
@@ -20,19 +20,19 @@ https://golang.org/doc/code.html#GOPATH
 
 Installation 
 -------------- 
-You can download it directly from GitHub. You have to download it into your $GOPATH/src folder 
+You can download Scalarm Workers Manager directly from GitHub. You have to download it into your $GOPATH/src folder 
 ``` 
-git clone https://github.com/mpaciore/scalarm_monitoring
+git clone https://github.com/Scalarm/scalarm_workers_manager.git
 ``` 
 Now you can install monitoring: 
 ```` 
-go install scalarm_monitoring 
+go install scalarm_workers_manager 
 ```` 
-This command will install monitoring in $GOPATH/bin. It's name will be scalarm_monitoring.
+This command will install monitoring in $GOPATH/bin. It's name will be scalarm_workers_manager.
 
 Config 
 -------- 
-The config folder contains single file config.json that contains required informations for monitor:
+The config folder contains single file config.json that contains required informations for Scalarm Workers Manager:
 
 * InformationServiceAddress - address of working Information Service
 * Login, Password - Scalarm credentials
@@ -66,5 +66,5 @@ Example config can be found in config/config.json.
 
 Run 
 ---- 
-Before running program you have to copy contents of config folder to folder with executable of monitoring. By default it will be $GOPATH/bin 
+Before running program you have to copy contents of config folder to folder with executable file of Scalarm Workers Manager. By default it will be $GOPATH/bin 
 

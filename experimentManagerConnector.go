@@ -176,6 +176,7 @@ func sm_record_marshal(sm_record, old_sm_record *Sm_record) string {
 	parameters.WriteString("}")
 
 	log.Printf("Update: " + parameters.String())
+	// TODO print ID?
 	return parameters.String()
 }
 
@@ -207,7 +208,7 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
+	if strconv.Itoa(resp.StatusCode) == "200" {
 		return nil
 	} else {
 		log.Printf("Status code: " + strconv.Itoa(resp.StatusCode))

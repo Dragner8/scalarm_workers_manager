@@ -1,6 +1,7 @@
 package main
 
 type IInfrastructureFacade interface {
+	GetId(*Sm_record) string
 	StatusCheck() ([]string, error)
 	HandleSM(*Sm_record, *ExperimentManagerConnector, string, []string)
 }

@@ -9,13 +9,27 @@ import (
 
 type QsubFacade struct{}
 
+//receives sm_record
+//returns id in this infrastructure
+func (qf QsubFacade) GetId(sm_record *Sm_record) string {
+	if sm_record.Job_id == "" {
+		return "none"
+	} else {
+		return sm_record.Job_id
+	}
+}
+
 //receives command to execute
 //executes command, extracts resource ID
 //returns new job ID
 func (qf QsubFacade) prepareResource(command string) (string, error) {
-	log.Print("Executing: " + command)
+	if VERBOSE {
+		log.Print("Executing: " + command)
+	}
 	stringOutput, err := execute(command)
-	log.Printf("Response:\n" + stringOutput)
+	if VERBOSE {
+		log.Printf("Response:\n" + stringOutput)
+	}
 	if err != nil {
 		return "", fmt.Errorf(stringOutput)
 	}
@@ -32,12 +46,16 @@ func (qf QsubFacade) prepareResource(command string) (string, error) {
 //returns array of resource states
 func (qf QsubFacade) StatusCheck() ([]string, error) {
 	command := `qstat -u $USER`
-	log.Print("Executing: " + command)
+	if VERBOSE {
+		log.Print("Executing: " + command)
+	}
 	stringOutput, err := execute(command)
 	if err != nil {
 		return nil, fmt.Errorf(stringOutput)
 	}
-	log.Printf("Response:\n" + stringOutput)
+	if VERBOSE {
+		log.Printf("Response:\n" + stringOutput)
+	}
 
 	return strings.Split(stringOutput, "\n"), nil
 }
@@ -117,12 +135,11 @@ func (qf QsubFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnec
 		sm_record.Resource_status = "error"
 		return
 	}
-
-	log.Printf("Sm_record state: " + sm_record.State)
-	log.Printf("Resource status: " + resource_status)
-	if sm_record.Cmd_to_execute_code == "" {
-		log.Printf("Command to execute: none")
-	} else {
+	if VERBOSE {
+		log.Printf("Sm_record state: " + sm_record.State)
+		log.Printf("Resource status: " + resource_status)
+	}
+	if sm_record.Cmd_to_execute_code != "" {
 		log.Printf("Command to execute: " + sm_record.Cmd_to_execute_code)
 	}
 
@@ -164,7 +181,9 @@ func (qf QsubFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnec
 			sm_record.Resource_status = "error"
 			return
 		}
-		log.Printf("Code files extracted")
+		if VERBOSE {
+			log.Printf("Code files extracted")
+		}
 
 		//run command
 		jobID, err := qf.prepareResource(sm_record.Cmd_to_execute)
@@ -173,7 +192,7 @@ func (qf QsubFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnec
 			sm_record.Resource_status = "error"
 			return
 		}
-		log.Printf("Job_id: " + jobID)
+		log.Printf("Assigned job_id: " + jobID)
 		sm_record.Job_id = jobID
 
 	} else if sm_record.Cmd_to_execute_code == "stop" {
@@ -186,16 +205,23 @@ func (qf QsubFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnec
 		// 	sm_record.Resource_status = "error"
 		// 	return
 		// }
-		log.Print("Executing: " + sm_record.Cmd_to_execute)
+		if VERBOSE {
+			log.Print("Executing: " + sm_record.Cmd_to_execute)
+		}
 		stringOutput, _ := execute(sm_record.Cmd_to_execute)
-		log.Printf("Response:\n" + stringOutput)
+		if VERBOSE {
+			log.Printf("Response:\n" + stringOutput)
+		}
 
 	} else if sm_record.Cmd_to_execute_code == "get_log" {
 
-		log.Print("Executing: " + sm_record.Cmd_to_execute)
+		if VERBOSE {
+			log.Print("Executing: " + sm_record.Cmd_to_execute)
+		}
 		stringOutput, _ := execute(sm_record.Cmd_to_execute)
-		log.Printf("Response:\n" + stringOutput)
-		//sm_record.Error_log = "Error while getting logs: " + err.Error()
+		if VERBOSE {
+			log.Printf("Response:\n" + stringOutput)
+		}
 		sm_record.Error_log = stringOutput
 
 	}

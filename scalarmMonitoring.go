@@ -9,6 +9,8 @@ import (
 
 const DEFAULT_PROBE_FREQ_SECS int = 10
 
+var VERBOSE bool
+
 func main() {
 
 	//set config file name
@@ -87,17 +89,16 @@ func main() {
 	log.Printf("Configuration finished\n\n\n\n\n")
 
 	for {
-		log.Printf("Starting main loop")
-
 		//check for config changes
-		configData.Infrastructures = AppendIfMissing(configData.Infrastructures, SignalHandler(infrastructuresChannel, errorChannel))
-		log.Printf("Current infrastructures: %v\n\n\n", configData.Infrastructures)
+		changed := false
+		configData.Infrastructures, changed = AppendIfMissing(configData.Infrastructures, SignalHandler(infrastructuresChannel, errorChannel))
+		if changed {
+			log.Printf("Infrastractures reloaded, current infrastructures: %v", configData.Infrastructures)
+		}
 
 		sm_records_count = 0
 		//infrastructures loop
 		for _, infrastructure = range configData.Infrastructures {
-			log.Printf("Starting " + infrastructure + " infrastructure loop")
-
 			//get sm_records
 			if raw_sm_records, err = RepetitiveCaller(
 				func() (interface{}, error) {
@@ -111,14 +112,24 @@ func main() {
 				sm_records = raw_sm_records.([]Sm_record)
 			}
 
+			log.Printf("[%v]: %v sm_records", infrastructure, len(sm_records))
+			if VERBOSE && len(sm_records) > 0 {
+				log.Printf("Scalarm ID, Job ID")
+				for _, sm_record = range sm_records {
+					log.Printf("%v, %v", sm_record.Id, infrastructureFacades[infrastructure].GetId(&sm_record))
+				}
+			}
+
 			sm_records_count += len(sm_records)
 			if len(sm_records) == 0 {
-				log.Printf("No sm_records")
-				break
+				continue
 			}
 
 			//check status
 			statusArray, statusError = infrastructureFacades[infrastructure].StatusCheck()
+			if statusError != nil {
+				log.Printf("Cannot get status for %v infrastructure", infrastructure)
+			}
 
 			//sm_records loop
 			for _, sm_record = range sm_records {
@@ -127,9 +138,8 @@ func main() {
 					sm_record.Resource_status = "not_available"
 					sm_record.Error_log = statusError.Error()
 				} else {
-					log.Printf("Starting sm_record handle function, ID: " + sm_record.Id)
+					// TODO print jobID again?
 					infrastructureFacades[infrastructure].HandleSM(&sm_record, experimentManagerConnector, infrastructure, statusArray)
-					log.Printf("Ending sm_record handle function")
 				}
 
 				//notify state change
@@ -147,7 +157,6 @@ func main() {
 			}
 		}
 
-		log.Printf("Ending main loop\n\n\n\n\n")
 		if !waitIndefinitely && sm_records_count == 0 {
 			if !noMoreRecords {
 				noMoreRecords = true

@@ -13,7 +13,7 @@ type QsubFacade struct{}
 //executes command, extracts resource ID
 //returns new job ID
 func (qf QsubFacade) prepareResource(command string) (string, error) {
-	log.Printf("Executing: " + command)
+	log.Print("Executing: " + command)
 	stringOutput, err := execute(command)
 	log.Printf("Response:\n" + stringOutput)
 	if err != nil {
@@ -32,8 +32,11 @@ func (qf QsubFacade) prepareResource(command string) (string, error) {
 //returns array of resource states
 func (qf QsubFacade) StatusCheck() ([]string, error) {
 	command := `qstat -u $USER`
-	log.Printf("Executing: " + command)
-	stringOutput, _ := execute(command)
+	log.Print("Executing: " + command)
+	stringOutput, err := execute(command)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("Response:\n" + stringOutput)
 
 	return strings.Split(stringOutput, "\n"), nil
@@ -183,13 +186,13 @@ func (qf QsubFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnec
 		// 	sm_record.Resource_status = "error"
 		// 	return
 		// }
-		log.Printf("Executing: " + sm_record.Cmd_to_execute)
+		log.Print("Executing: " + sm_record.Cmd_to_execute)
 		stringOutput, _ := execute(sm_record.Cmd_to_execute)
 		log.Printf("Response:\n" + stringOutput)
 
 	} else if sm_record.Cmd_to_execute_code == "get_log" {
 
-		log.Printf("Executing: " + sm_record.Cmd_to_execute)
+		log.Print("Executing: " + sm_record.Cmd_to_execute)
 		stringOutput, _ := execute(sm_record.Cmd_to_execute)
 		log.Printf("Response:\n" + stringOutput)
 		//sm_record.Error_log = "Error while getting logs: " + err.Error()

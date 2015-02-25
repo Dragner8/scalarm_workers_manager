@@ -13,7 +13,7 @@ type QcgFacade struct{}
 //executes command, extracts resource ID
 //returns new job ID
 func (qf QcgFacade) prepareResource(command string) (string, error) {
-	log.Printf("Executing: " + command)
+	log.Print("Executing: " + command)
 	stringOutput, err := execute(command)
 	log.Printf("Response:\n" + stringOutput)
 	if err != nil {
@@ -32,8 +32,11 @@ func (qf QcgFacade) prepareResource(command string) (string, error) {
 //returns array of resource states
 func (qf QcgFacade) StatusCheck() ([]string, error) {
 	command := `QCG_ENV_PROXY_DURATION_MIN=12 qcg-list -F "%-25I  %-20S"`
-	log.Printf("Executing: " + command)
-	stringOutput, _ := execute(command)
+	log.Print("Executing: " + command)
+	stringOutput, err := execute(command)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("Response:\n" + stringOutput)
 
 	if strings.Contains(stringOutput, "Enter GRID pass phrase for this identity:") {
@@ -200,13 +203,13 @@ func (qf QcgFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnect
 		// 	sm_record.Resource_status = "error"
 		// 	return
 		// }
-		log.Printf("Executing: " + sm_record.Cmd_to_execute)
+		log.Print("Executing: " + sm_record.Cmd_to_execute)
 		stringOutput, _ := execute(sm_record.Cmd_to_execute)
 		log.Printf("Response:\n" + stringOutput)
 
 	} else if sm_record.Cmd_to_execute_code == "get_log" {
 
-		log.Printf("Executing: " + sm_record.Cmd_to_execute)
+		log.Print("Executing: " + sm_record.Cmd_to_execute)
 		stringOutput, _ := execute(sm_record.Cmd_to_execute)
 		log.Printf("Response:\n" + stringOutput)
 		//sm_record.Error_log = "Error while getting logs: " + err.Error()

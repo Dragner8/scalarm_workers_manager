@@ -12,11 +12,9 @@ const DEFAULT_PROBE_FREQ_SECS int = 10
 func main() {
 
 	//set config file name
-	var configFile string
+	var configFile string = "config.json"
 	if len(os.Args) == 2 {
 		configFile = os.Args[1]
-	} else {
-		configFile = "config.json"
 	}
 
 	//register working
@@ -24,14 +22,16 @@ func main() {
 	defer UnregisterWorking()
 
 	//declare variables - memory optimization
+	var sm_records []Sm_record
 	var sm_record Sm_record
 	var old_sm_record Sm_record
-	var sm_records []Sm_record
-	var nonerrorSmCount int
+	var raw_sm_records interface{}
+	var sm_records_count int
+
+	var infrastructure string
 	var statusArray []string
 	var err error
-	var infrastructure string
-	var raw_sm_records interface{}
+
 	var noMoreRecords bool = false
 	var noMoreRecordsTime time.Time
 
@@ -43,23 +43,24 @@ func main() {
 	//read configuration
 	configData, err := ReadConfiguration(configFile)
 	if err != nil {
-		log.Fatal("Could not read configuration file")
+		log.Fatal("Could not read configuration file: " + configFile)
 	}
 
 	log.Printf("Config loaded")
 	log.Printf("\tInformation Service address: %v", configData.InformationServiceAddress)
-	log.Printf("\tlogin:                       %v", configData.Login)
-	log.Printf("\tinfrastructures:             %v", configData.Infrastructures)
+	log.Printf("\tLogin:                       %v", configData.Login)
+	log.Printf("\tInfrastructures:             %v", configData.Infrastructures)
 	log.Printf("\tScalarm certificate path:    %v", configData.ScalarmCertificatePath)
-	log.Printf("\tinsecure SSL:                %v", configData.InsecureSSL)
 	log.Printf("\tScalarm scheme:              %v", configData.ScalarmScheme)
+	log.Printf("\tInsecure SSL:                %v", configData.InsecureSSL)
 	log.Printf("\tExit timeout (secs):         %v", configData.ExitTimeoutSecs)
 	log.Printf("\tProbe frequency (secs):      %v", configData.ProbeFrequencySecs)
+	log.Printf("\tVerbose mode:                %v", configData.VerboseMode)
 
 	//setup time values
 	var waitIndefinitely bool = (configData.ExitTimeoutSecs < 0)
-	var exitTimeout time.Duration = time.Duration(configData.ExitTimeoutSecs)*time.Second
-	var probeFrequencySecs = time.Duration(DEFAULT_PROBE_FREQ_SECS)*time.Second
+	var exitTimeout time.Duration = time.Duration(configData.ExitTimeoutSecs) * time.Second
+	var probeFrequencySecs = time.Duration(DEFAULT_PROBE_FREQ_SECS) * time.Second
 	if configData.ProbeFrequencySecs > 0 {
 		probeFrequencySecs = time.Duration(configData.ProbeFrequencySecs) * time.Second
 	}
@@ -91,8 +92,7 @@ func main() {
 		configData.Infrastructures = AppendIfMissing(configData.Infrastructures, SignalHandler(infrastructuresChannel, errorChannel))
 		log.Printf("Current infrastructures: %v\n\n\n", configData.Infrastructures)
 
-		nonerrorSmCount = 0
-
+		sm_records_count = 0
 		//infrastructures loop
 		for _, infrastructure = range configData.Infrastructures {
 			log.Printf("Starting " + infrastructure + " infrastructure loop")
@@ -110,15 +110,17 @@ func main() {
 				sm_records = raw_sm_records.([]Sm_record)
 			}
 
+			sm_records_count += len(sm_records)
+			if len(sm_records) == 0 {
+				log.Printf("No sm_records")
+				break
+			}
+
+			//check status
 			statusArray, err = infrastructureFacades[infrastructure].StatusCheck()
 			if err != nil {
 				log.Printf("Cannot get status for %s infrastructure", infrastructure)
 				continue
-			}
-
-			nonerrorSmCount += len(sm_records)
-			if len(sm_records) == 0 {
-				log.Printf("No sm_records")
 			}
 
 			//sm_records loop
@@ -128,10 +130,6 @@ func main() {
 				log.Printf("Starting sm_record handle function, ID: " + sm_record.Id)
 				infrastructureFacades[infrastructure].HandleSM(&sm_record, experimentManagerConnector, infrastructure, statusArray)
 				log.Printf("Ending sm_record handle function")
-
-				if sm_record.State == "error" {
-					nonerrorSmCount--
-				}
 
 				//notify state change
 				if old_sm_record != sm_record {
@@ -146,11 +144,10 @@ func main() {
 					}
 				}
 			}
-			log.Printf("Ending " + infrastructure + " infrastructure loop\n\n\n")
 		}
 
 		log.Printf("Ending main loop\n\n\n\n\n")
-		if !waitIndefinitely && nonerrorSmCount == 0 {
+		if !waitIndefinitely && sm_records_count == 0 {
 			if !noMoreRecords {
 				noMoreRecords = true
 				noMoreRecordsTime = time.Now()

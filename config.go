@@ -19,6 +19,7 @@ type ConfigData struct {
 	InsecureSSL               bool
 	ExitTimeoutSecs           int
 	ProbeFrequencySecs        int
+	VerboseMode               bool
 }
 
 func ReadConfiguration(configFile string) (*ConfigData, error) {
@@ -31,6 +32,13 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 	err = json.Unmarshal(data, &configData)
 	if err != nil {
 		return nil, err
+	}
+
+	for i, a := range configData.Infrastructures {
+		if a == "plgrid" {
+			configData.Infrastructures = append(configData.Infrastructures[:i], configData.Infrastructures[i+1:]...)
+			configData.Infrastructures = AppendIfMissing(configData.Infrastructures, []string{"qsub", "qcg"})
+		}
 	}
 
 	if configData.ScalarmCertificatePath != "" {

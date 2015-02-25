@@ -30,6 +30,7 @@ func main() {
 
 	var infrastructure string
 	var statusArray []string
+	var statusError error
 	var err error
 
 	var noMoreRecords bool = false
@@ -117,19 +118,19 @@ func main() {
 			}
 
 			//check status
-			statusArray, err = infrastructureFacades[infrastructure].StatusCheck()
-			if err != nil {
-				log.Printf("Cannot get status for %s infrastructure", infrastructure)
-				continue
-			}
+			statusArray, statusError = infrastructureFacades[infrastructure].StatusCheck()
 
 			//sm_records loop
 			for _, sm_record = range sm_records {
 				old_sm_record = sm_record
-
-				log.Printf("Starting sm_record handle function, ID: " + sm_record.Id)
-				infrastructureFacades[infrastructure].HandleSM(&sm_record, experimentManagerConnector, infrastructure, statusArray)
-				log.Printf("Ending sm_record handle function")
+				if statusError != nil {
+					sm_record.Resource_status = "not_available"
+					sm_record.Error_log = statusError.Error()
+				} else {
+					log.Printf("Starting sm_record handle function, ID: " + sm_record.Id)
+					infrastructureFacades[infrastructure].HandleSM(&sm_record, experimentManagerConnector, infrastructure, statusArray)
+					log.Printf("Ending sm_record handle function")
+				}
 
 				//notify state change
 				if old_sm_record != sm_record {

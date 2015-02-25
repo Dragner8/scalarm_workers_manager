@@ -35,7 +35,7 @@ func (qf QcgFacade) StatusCheck() ([]string, error) {
 	log.Print("Executing: " + command)
 	stringOutput, err := execute(command)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(stringOutput)
 	}
 	log.Printf("Response:\n" + stringOutput)
 

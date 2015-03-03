@@ -10,6 +10,7 @@ type Sm_record struct {
 	Cmd_to_execute      string //akcja do wykonania						do wykonania
 	Cmd_to_execute_code string //nazwa akcji do wykonania				do parsowania wyjścia z wykonania
 	Error_log           string //wynik polecenia get_log				do updatowania po "get_log"
+	Name                string //
 	Job_id              string //id dla grid							do sprawdzania stanu
 	Pid                 string //id dla private machine					do sprawdzania stanu
 	Vm_id               string //id dla cloud							do sprawdzania stanu

@@ -86,7 +86,7 @@ func main() {
 	//create infrastructure facades
 	infrastructureFacades := NewInfrastructureFacades()
 
-	log.Printf("Configuration finished\n\n\n\n\n")
+	log.Printf("Configuration finished")
 
 	for {
 		//check for config changes
@@ -114,10 +114,11 @@ func main() {
 
 			log.Printf("[%v]: %v sm_records", infrastructure, len(sm_records))
 			if VERBOSE && len(sm_records) > 0 {
-				log.Printf("Scalarm ID, Job ID")
+				log.Printf("Scalarm ID, Name")
 				for _, sm_record = range sm_records {
 					log.Printf("%v, %v", sm_record.Id, infrastructureFacades[infrastructure].GetId(&sm_record))
 				}
+				log.Printf("----------------")
 			}
 
 			sm_records_count += len(sm_records)
@@ -138,7 +139,6 @@ func main() {
 					sm_record.Resource_status = "not_available"
 					sm_record.Error_log = statusError.Error()
 				} else {
-					// TODO print jobID again?
 					infrastructureFacades[infrastructure].HandleSM(&sm_record, experimentManagerConnector, infrastructure, statusArray)
 				}
 

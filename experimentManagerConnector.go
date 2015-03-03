@@ -173,9 +173,11 @@ func sm_record_marshal(sm_record, old_sm_record *Sm_record) string {
 
 	inner_sm_record_marshal(sm_record.Res_id, old_sm_record.Res_id, "res_id", &comma, &parameters)
 
+	inner_sm_record_marshal(sm_record.Name, old_sm_record.Name, "name", &comma, &parameters)
+
 	parameters.WriteString("}")
 
-	log.Printf("Update: " + parameters.String())
+	log.Printf("[%v][%v] Update: %v", sm_record.Id, sm_record.Name, parameters.String())
 	// TODO print ID?
 	return parameters.String()
 }
@@ -211,7 +213,8 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	if strconv.Itoa(resp.StatusCode) == "200" {
 		return nil
 	} else {
-		log.Printf("Status code: " + strconv.Itoa(resp.StatusCode))
+		log.Printf("[%v][%v] Status code: %v", sm_record.Id, sm_record.Name, strconv.Itoa(resp.StatusCode))
+		// verbose - wypisać body
 		return errors.New("Update failed")
 	}
 	return nil

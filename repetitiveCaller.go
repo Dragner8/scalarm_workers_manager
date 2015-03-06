@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"strconv"
 	"time"
+
+	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
 func RepetitiveCaller(f func() (interface{}, error), intervals []int, functionName string) (out interface{}, err error) {
@@ -18,7 +19,7 @@ func RepetitiveCaller(f func() (interface{}, error), intervals []int, functionNa
 		if err == nil || duration == -1 {
 			return
 		}
-		log.Printf("RepetitiveCaller : call " + functionName + " failed, err: \n" + err.Error() + "\nReattempt in " + strconv.Itoa(duration) + "s")
+		logger.Info("RepetitiveCaller : call " + functionName + " failed, err: \n" + err.Error() + "\nReattempt in " + strconv.Itoa(duration) + "s")
 		time.Sleep(time.Second * time.Duration(duration))
 	}
 	return

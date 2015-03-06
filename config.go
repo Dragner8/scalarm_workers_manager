@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
 type ConfigData struct {
@@ -51,8 +52,6 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 		configData.ScalarmScheme = "https"
 	}
 
-	VERBOSE = configData.VerboseMode
-
 	return &configData, nil
 }
 
@@ -96,9 +95,9 @@ func SignalHandler(infrastructuresChannel chan []string, errorChannel chan error
 	select {
 	case err, ok := <-errorChannel:
 		if ok {
-			log.Printf("An error occured while reloading config: " + err.Error())
+			logger.Info("An error occured while reloading config: " + err.Error())
 		} else {
-			log.Fatal("Channel closed!")
+			logger.Fatal("Channel closed!")
 		}
 	default:
 	}
@@ -109,7 +108,7 @@ func SignalHandler(infrastructuresChannel chan []string, errorChannel chan error
 		if ok {
 			return addedInfrastructures
 		} else {
-			log.Fatal("Channel closed!")
+			logger.Fatal("Channel closed!")
 		}
 	default:
 	}

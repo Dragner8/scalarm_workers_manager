@@ -1,12 +1,22 @@
 package main
 
-import "os/exec"
+import (
+	"os/exec"
 
-func execute(command string) (string, error) {
+	"github.com/scalarm/scalarm_workers_manager/logger"
+)
 
+func executeSilent(command string) (string, error) {
 	output, err := exec.Command("bash", "-c", command).CombinedOutput()
 	stringOutput := string(output[:])
 
+	return stringOutput, err
+}
+
+func execute(ids, command string) (string, error) {
+	logger.Debug("%v Executing: %v", ids, command)
+	stringOutput, err := executeSilent(command)
+	logger.Debug("%v Response: %v", ids, stringOutput)
 	return stringOutput, err
 }
 

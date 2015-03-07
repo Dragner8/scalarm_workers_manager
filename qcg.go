@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
+
+	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
 type QcgFacade struct{}
@@ -12,10 +13,8 @@ type QcgFacade struct{}
 //receives command to execute
 //executes command, extracts resource ID
 //returns new job ID
-func (qf QcgFacade) prepareResource(command string) (string, error) {
-	log.Printf("Executing: " + command)
-	stringOutput, err := execute(command)
-	log.Printf("Response:\n" + stringOutput)
+func (qf QcgFacade) prepareResource(ids, command string) (string, error) {
+	stringOutput, err := execute(ids, command)
 	if err != nil {
 		return "", fmt.Errorf(stringOutput)
 	}
@@ -32,12 +31,14 @@ func (qf QcgFacade) prepareResource(command string) (string, error) {
 //returns array of resource states
 func (qf QcgFacade) StatusCheck() ([]string, error) {
 	command := `QCG_ENV_PROXY_DURATION_MIN=12 qcg-list -F "%-25I  %-20S"`
-	log.Printf("Executing: " + command)
-	stringOutput, _ := execute(command)
-	log.Printf("Response:\n" + stringOutput)
+
+	stringOutput, err := execute("[qcg]", command)
+	if err != nil {
+		return nil, fmt.Errorf(stringOutput)
+	}
 
 	if strings.Contains(stringOutput, "Enter GRID pass phrase for this identity:") {
-		log.Printf("Password required, cannot monitor QCG\n")
+		logger.Info("Password required, cannot monitor QCG infrastructure\n")
 		return nil, fmt.Errorf("Proxy invalid")
 	}
 
@@ -132,12 +133,13 @@ func (qf QcgFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnect
 		return
 	}
 
-	log.Printf("Sm_record state: " + sm_record.State)
-	log.Printf("Resource status: " + resource_status)
-	if sm_record.Cmd_to_execute_code == "" {
-		log.Printf("Command to execute: none")
-	} else {
-		log.Printf("Command to execute: " + sm_record.Cmd_to_execute_code)
+	ids := sm_record.GetIDs()
+
+	logger.Debug("%v Sm_record state: %v", ids, sm_record.State)
+	logger.Debug("%v Resource status: %v", ids, resource_status)
+
+	if sm_record.Cmd_to_execute_code != "" {
+		logger.Info("%v Command to execute: %v", ids, sm_record.Cmd_to_execute_code)
 	}
 
 	defer func() {
@@ -154,7 +156,7 @@ func (qf QcgFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnect
 			nil,
 			"GetSimulationManagerCode",
 		); err != nil {
-			log.Fatal("Unable to get simulation manager code")
+			logger.Fatal("Unable to get simulation manager code")
 		}
 
 		//extract first zip
@@ -165,56 +167,46 @@ func (qf QcgFacade) HandleSM(sm_record *Sm_record, emc *ExperimentManagerConnect
 			return
 		}
 		//move second zip one directory up
-		_, err = execute("mv scalarm_simulation_manager_code_" + sm_record.Sm_uuid + "/* .")
+		_, err = executeSilent("mv scalarm_simulation_manager_code_" + sm_record.Sm_uuid + "/* .")
 		if err != nil {
 			sm_record.Error_log = err.Error()
 			sm_record.Resource_status = "error"
 			return
 		}
 		//remove both zips and catalog left from first unzip
-		_, err = execute("rm -rf  sources_" + sm_record.Id + ".zip" + " scalarm_simulation_manager_code_" + sm_record.Sm_uuid)
+		_, err = executeSilent("rm -rf  sources_" + sm_record.Id + ".zip scalarm_simulation_manager_code_" + sm_record.Sm_uuid)
 		if err != nil {
 			sm_record.Error_log = err.Error()
 			sm_record.Resource_status = "error"
 			return
 		}
-		log.Printf("Code files extracted")
+		logger.Debug("Code files extracted")
 
 		//run command
-		jobID, err := qf.prepareResource(sm_record.Cmd_to_execute)
+		jobID, err := qf.prepareResource(ids, sm_record.Cmd_to_execute)
 		if err != nil {
 			sm_record.Error_log = err.Error()
 			sm_record.Resource_status = "error"
 			return
 		}
-		log.Printf("Job_id: " + jobID)
+		logger.Info("%v Assigned job_id: %v", ids, jobID)
 		sm_record.Job_id = jobID
 
 	} else if sm_record.Cmd_to_execute_code == "stop" {
 
-		// log.Printf("Executing: " + sm_record.Cmd_to_execute)
-		// stringOutput, err := execute(sm_record.Cmd_to_execute)
-		// log.Printf("Response:\n" + stringOutput)
-		// if err != nil {
-		// 	sm_record.Error_log = stringOutput
-		// 	sm_record.Resource_status = "error"
-		// 	return
-		// }
-		log.Printf("Executing: " + sm_record.Cmd_to_execute)
-		stringOutput, _ := execute(sm_record.Cmd_to_execute)
-		log.Printf("Response:\n" + stringOutput)
+		stringOutput, err := execute(ids, sm_record.Cmd_to_execute)
+		if err != nil {
+			sm_record.Error_log = stringOutput
+			sm_record.Resource_status = "error"
+			return
+		}
 
 	} else if sm_record.Cmd_to_execute_code == "get_log" {
 
-		log.Printf("Executing: " + sm_record.Cmd_to_execute)
-		stringOutput, _ := execute(sm_record.Cmd_to_execute)
-		log.Printf("Response:\n" + stringOutput)
-		//sm_record.Error_log = "Error while getting logs: " + err.Error()
+		stringOutput, _ := execute(ids, sm_record.Cmd_to_execute)
 		sm_record.Error_log = stringOutput
 
 	}
 
-	sm_record.Cmd_to_execute = ""
-	sm_record.Cmd_to_execute_code = ""
 	sm_record.Resource_status = resource_status
 }

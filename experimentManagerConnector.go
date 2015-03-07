@@ -7,12 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
-	"strconv"
 	"strings"
+
+	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
 type ExperimentManagerConnector struct {
@@ -31,7 +31,7 @@ func NewExperimentManagerConnector(login, password, certificatePath, scheme stri
 		CA_Pool := x509.NewCertPool()
 		severCert, err := ioutil.ReadFile(certificatePath)
 		if err != nil {
-			log.Fatal("An error occured: could not load Scalarm certificate")
+			logger.Fatal("Could not load Scalarm certificate")
 		}
 		CA_Pool.AppendCertsFromPEM(severCert)
 
@@ -55,7 +55,6 @@ func (emc *ExperimentManagerConnector) GetExperimentManagerLocation(informationS
 		return err
 	}
 
-	log.Printf(string(body))
 	var experimentManagerAddresses []string
 	err = json.Unmarshal(body, &experimentManagerAddresses)
 	if err != nil {
@@ -63,7 +62,7 @@ func (emc *ExperimentManagerConnector) GetExperimentManagerLocation(informationS
 	}
 
 	emc.experimentManagerAddress = experimentManagerAddresses[0] // TODO random
-	log.Printf("\texp_man_address: " + emc.experimentManagerAddress)
+	logger.Info("\tEM address:                  %v", emc.experimentManagerAddress)
 	return nil
 }
 
@@ -173,9 +172,11 @@ func sm_record_marshal(sm_record, old_sm_record *Sm_record) string {
 
 	inner_sm_record_marshal(sm_record.Res_id, old_sm_record.Res_id, "res_id", &comma, &parameters)
 
+	inner_sm_record_marshal(sm_record.Name, old_sm_record.Name, "name", &comma, &parameters)
+
 	parameters.WriteString("}")
 
-	log.Printf("Update: " + parameters.String())
+	logger.Info("%v Update: %v", sm_record.GetIDs(), parameters.String())
 	return parameters.String()
 }
 
@@ -185,7 +186,7 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	// if err != nil {
 	// 	return err
 	// }
-	// log.Printf(string(sm_json))
+	// logger.Debug(string(sm_json))
 	// data := url.Values{"parameters": {string(sm_json)}, "infrastructure": {infrastructure}}
 
 	//----
@@ -210,7 +211,13 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	if resp.StatusCode == 200 {
 		return nil
 	} else {
-		log.Printf("Status code: " + strconv.Itoa(resp.StatusCode))
+		logger.Info("%v Status code: %v", sm_record.GetIDs(), resp.StatusCode)
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		logger.Debug("%s", body)
 		return errors.New("Update failed")
 	}
 	return nil

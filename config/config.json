@@ -10,5 +10,6 @@
 	"ScalarmCertificatePath" : "cert.pem",
 	"ScalarmScheme" : "https",
     "ExitTimeoutSecs" : 0,
-    "ProbeFrequencySecs": 10
+    "ProbeFrequencySecs": 10,
+    "VerboseMode": true
 }

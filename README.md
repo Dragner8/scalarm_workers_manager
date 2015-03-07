@@ -22,11 +22,11 @@ Installation
 -------------- 
 You can download Scalarm Workers Manager directly from GitHub. You have to download it into your $GOPATH/src folder 
 ``` 
-git clone https://github.com/Scalarm/scalarm_workers_manager.git
+go get github.com/scalarm/scalarm_workers_manager
 ``` 
 Now you can install monitoring: 
 ```` 
-go install scalarm_workers_manager 
+go install github.com/scalarm/scalarm_workers_manager
 ```` 
 This command will install monitoring in $GOPATH/bin. It's name will be scalarm_workers_manager.
 
@@ -42,6 +42,7 @@ The config folder contains single file config.json that contains required inform
 * InsecureSSL - should invalid certificates (eg. self-signed) be accepted
 * ProbeFrequencySecs (optional, default: 10) - number of delay in seconds between getting records and checking their state if last check was completed
 * ExitTimeout (optional, default: 0) - number of seconds to wait before exiting if there are no more records available; if this value is greater than 0, the minimal time to exit is ProbeFrequencySecs; if this values is less than 0, process continues work indefinitely (use with caution!)
+* VerboseMode - should more detailed logs be shown
 
 Example config:
 
@@ -59,7 +60,8 @@ Example config:
 	"ScalarmScheme" : "https",
 	"InsecureSSL" : true,
 	"ProbeFrequencySecs": 10,
-	"ExitTimeout": 0
+	"ExitTimeout": 0,
+	"VerboseMode": false
 }
 ```
 Example config can be found in config/config.json.

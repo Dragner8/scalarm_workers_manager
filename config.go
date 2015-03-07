@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
 type ConfigData struct {
@@ -19,6 +20,7 @@ type ConfigData struct {
 	InsecureSSL               bool
 	ExitTimeoutSecs           int
 	ProbeFrequencySecs        int
+	VerboseMode               bool
 }
 
 func ReadConfiguration(configFile string) (*ConfigData, error) {
@@ -31,6 +33,13 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 	err = json.Unmarshal(data, &configData)
 	if err != nil {
 		return nil, err
+	}
+
+	for i, a := range configData.Infrastructures {
+		if a == "plgrid" {
+			configData.Infrastructures = append(configData.Infrastructures[:i], configData.Infrastructures[i+1:]...)
+			configData.Infrastructures, _ = AppendIfMissing(configData.Infrastructures, []string{"qsub", "qcg"})
+		}
 	}
 
 	if configData.ScalarmCertificatePath != "" {
@@ -46,20 +55,25 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 	return &configData, nil
 }
 
-func innerAppendIfMissing(currentInfrastructures []string, newInfrastructure string) []string {
+func innerAppendIfMissing(currentInfrastructures []string, newInfrastructure string) ([]string, bool) {
 	for _, c := range currentInfrastructures {
 		if c == newInfrastructure {
-			return currentInfrastructures
+			return currentInfrastructures, false
 		}
 	}
-	return append(currentInfrastructures, newInfrastructure)
+	return append(currentInfrastructures, newInfrastructure), true
 }
 
-func AppendIfMissing(currentInfrastructures []string, newInfrastructures []string) []string {
+func AppendIfMissing(currentInfrastructures []string, newInfrastructures []string) ([]string, bool) {
+	changed := false
 	for _, n := range newInfrastructures {
-		currentInfrastructures = innerAppendIfMissing(currentInfrastructures, n)
+		change := false
+		currentInfrastructures, change = innerAppendIfMissing(currentInfrastructures, n)
+		if change {
+			changed = true
+		}
 	}
-	return currentInfrastructures
+	return currentInfrastructures, changed
 }
 
 func SignalCatcher(infrastructuresChannel chan []string, errorChannel chan error, configFile string) {
@@ -81,9 +95,9 @@ func SignalHandler(infrastructuresChannel chan []string, errorChannel chan error
 	select {
 	case err, ok := <-errorChannel:
 		if ok {
-			log.Printf("An error occured while reloading config: " + err.Error())
+			logger.Info("An error occured while reloading config: " + err.Error())
 		} else {
-			log.Fatal("Channel closed!")
+			logger.Fatal("Channel closed!")
 		}
 	default:
 	}
@@ -92,13 +106,11 @@ func SignalHandler(infrastructuresChannel chan []string, errorChannel chan error
 	select {
 	case addedInfrastructures, ok := <-infrastructuresChannel:
 		if ok {
-			log.Printf("Config reload requested, infrastructures found: %v", addedInfrastructures)
 			return addedInfrastructures
 		} else {
-			log.Fatal("Channel closed!")
+			logger.Fatal("Channel closed!")
 		}
 	default:
-		log.Printf("Config reload not requested")
 	}
 
 	return nil

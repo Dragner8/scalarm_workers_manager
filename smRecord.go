@@ -6,44 +6,44 @@ import (
 	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
-type Sm_record struct {
-	Id                  string `json:"_id"`
-	Sm_uuid             string
-	State               string
-	Resource_status     string
-	Cmd_to_execute      string
-	Cmd_to_execute_code string
-	Error_log           string
-	Name                string
-	Job_id              string
-	Pid                 string
-	Vm_id               string
-	Res_id              string
+type SMRecord struct {
+	ID               string `json:"_id"`
+	SMUUID           string `json:"sm_uuid"`
+	State            string `json:"state"`
+	ResourceStatus   string `json:"resource_status"`
+	CmdToExecute     string `json:"cmd_to_execute"`
+	CmdToExecuteCode string `json:"cmd_to_execute_code"`
+	ErrorLog         string `json:"error_log"`
+	Name             string `json:"name"`
+	JobID            string `json:"job_id"`
+	PID              string `json:"pid"`
+	VMID             string `json:"vm_id"`
+	ResID            string `json:"res_id"`
 }
 
-func (sm Sm_record) Print() {
+func (smRecord SMRecord) Print() {
 	logger.Debug("sm_record contents:")
-	logger.Debug("\t_id                 %v", sm.Id)
-	logger.Debug("\tsm_uuid             %v", sm.Sm_uuid)
-	logger.Debug("\tstate               %v", sm.State)
-	logger.Debug("\tresource_status     %v", sm.Resource_status)
-	logger.Debug("\tcmd_to_execute      %v", sm.Cmd_to_execute)
-	logger.Debug("\tcmd_to_execute_code %v", sm.Cmd_to_execute_code)
-	logger.Debug("\terror_log           %v", sm.Error_log)
-	logger.Debug("\tname                %v", sm.Name)
-	logger.Debug("\tjob_id              %v", sm.Job_id)
-	logger.Debug("\tpid                 %v", sm.Pid)
-	logger.Debug("\tvm_id               %v", sm.Vm_id)
-	logger.Debug("\tres_id              %v", sm.Res_id)
+	logger.Debug("\t_id                 %v", smRecord.ID)
+	logger.Debug("\tsm_uuid             %v", smRecord.SMUUID)
+	logger.Debug("\tstate               %v", smRecord.State)
+	logger.Debug("\tresource_status     %v", smRecord.ResourceStatus)
+	logger.Debug("\tcmd_to_execute      %v", smRecord.CmdToExecute)
+	logger.Debug("\tcmd_to_execute_code %v", smRecord.CmdToExecuteCode)
+	logger.Debug("\terror_log           %v", smRecord.ErrorLog)
+	logger.Debug("\tname                %v", smRecord.Name)
+	logger.Debug("\tjob_id              %v", smRecord.JobID)
+	logger.Debug("\tpid                 %v", smRecord.PID)
+	logger.Debug("\tvm_id               %v", smRecord.VMID)
+	logger.Debug("\tres_id              %v", smRecord.ResID)
 }
 
-func (sm Sm_record) GetIDs() string {
+func (smRecord SMRecord) GetIDs() string {
 	var buffer bytes.Buffer
 
 	buffer.WriteString("[")
-	buffer.WriteString(sm.Id)
+	buffer.WriteString(smRecord.ID)
 	buffer.WriteString("] [")
-	buffer.WriteString(sm.Name)
+	buffer.WriteString(smRecord.Name)
 	buffer.WriteString("]")
 
 	return buffer.String()

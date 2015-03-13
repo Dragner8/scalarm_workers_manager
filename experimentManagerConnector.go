@@ -67,11 +67,11 @@ func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress s
 }
 
 type EMJsonResponse struct {
-	Status     string
-	Sm_records []Sm_record
+	Status    string     `json:"status"`
+	SMRecords []SMRecord `json:"sm_records"`
 }
 
-func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]Sm_record, error) {
+func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]SMRecord, error) {
 	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers?"
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
@@ -104,7 +104,7 @@ func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]Sm
 		return nil, errors.New("Damaged data")
 	}
 
-	return response.Sm_records, nil
+	return response.SMRecords, nil
 }
 
 func (emc *EMConnector) GetSimulationManagerCode(smRecordId string, infrastructure string) error {
@@ -149,40 +149,42 @@ func inner_sm_record_marshal(current, old, name string, comma *bool, parameters 
 	}
 }
 
-func sm_record_marshal(sm_record, old_sm_record *Sm_record) string {
+func sm_record_marshal(smRecord, smRecordOld *SMRecord) string {
 	var parameters bytes.Buffer
 	parameters.WriteString("{")
 	comma := false
 
-	inner_sm_record_marshal(sm_record.State, old_sm_record.State, "state", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.SMUUID, smRecordOld.SMUUID, "sm_uuid", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Resource_status, old_sm_record.Resource_status, "resource_status", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.State, smRecordOld.State, "state", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Cmd_to_execute, old_sm_record.Cmd_to_execute, "cmd_to_execute", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.ResourceStatus, smRecordOld.ResourceStatus, "resource_status", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Cmd_to_execute_code, old_sm_record.Cmd_to_execute_code, "cmd_to_execute_code", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.CmdToExecute, smRecordOld.CmdToExecute, "cmd_to_execute", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Error_log, old_sm_record.Error_log, "error_log", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.CmdToExecuteCode, smRecordOld.CmdToExecuteCode, "cmd_to_execute_code", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Job_id, old_sm_record.Job_id, "job_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.ErrorLog, smRecordOld.ErrorLog, "error_log", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Pid, old_sm_record.Pid, "pid", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.Name, smRecordOld.Name, "name", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Vm_id, old_sm_record.Vm_id, "vm_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.JobID, smRecordOld.JobID, "job_id", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Res_id, old_sm_record.Res_id, "res_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.PID, smRecordOld.PID, "pid", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Name, old_sm_record.Name, "name", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.VMID, smRecordOld.VMID, "vm_id", &comma, &parameters)
+
+	inner_sm_record_marshal(smRecord.ResID, smRecordOld.ResID, "res_id", &comma, &parameters)
 
 	parameters.WriteString("}")
 
-	logger.Info("%v Update: %v", sm_record.GetIDs(), parameters.String())
+	logger.Info("%v Update: %v", smRecord.GetIDs(), parameters.String())
 	return parameters.String()
 }
 
-func (emc *EMConnector) NotifyStateChange(sm_record, old_sm_record *Sm_record, infrastructure string) error { //do zmiany
+func (emc *EMConnector) NotifyStateChange(smRecord, smRecordOld *SMRecord, infrastructure string) error { //do zmiany
 
-	// sm_json, err := json.Marshal(sm_record)
+	// sm_json, err := json.Marshal(smRecord)
 	// if err != nil {
 	// 	return err
 	// }
@@ -190,10 +192,10 @@ func (emc *EMConnector) NotifyStateChange(sm_record, old_sm_record *Sm_record, i
 	// data := url.Values{"parameters": {string(sm_json)}, "infrastructure": {infrastructure}}
 
 	//----
-	data := url.Values{"parameters": {sm_record_marshal(sm_record, old_sm_record)}, "infrastructure": {infrastructure}}
+	data := url.Values{"parameters": {sm_record_marshal(smRecord, smRecordOld)}, "infrastructure": {infrastructure}}
 	//----
 
-	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers/" + sm_record.Id
+	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers/" + smRecord.ID
 
 	request, err := http.NewRequest("PUT", urlString, strings.NewReader(data.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -211,7 +213,7 @@ func (emc *EMConnector) NotifyStateChange(sm_record, old_sm_record *Sm_record, i
 	if resp.StatusCode == 200 {
 		return nil
 	} else {
-		logger.Info("%v Status code: %v", sm_record.GetIDs(), resp.StatusCode)
+		logger.Info("%v Status code: %v", smRecord.GetIDs(), resp.StatusCode)
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -223,12 +225,12 @@ func (emc *EMConnector) NotifyStateChange(sm_record, old_sm_record *Sm_record, i
 	return nil
 }
 
-func escape(input string) string {
-	output := strings.Replace(input, "\n", "\\n", -1)
-	output = strings.Replace(output, "\r", "\\r", -1)
-	output = strings.Replace(output, "\t", "\\t", -1)
-	output = strings.Replace(output, `'`, `\'`, -1)
-	output = strings.Replace(output, `"`, `\"`, -1)
+func escape(s string) string {
+	s = strings.Replace(s, "\n", "\\n", -1)
+	s = strings.Replace(s, "\r", "\\r", -1)
+	s = strings.Replace(s, "\t", "\\t", -1)
+	s = strings.Replace(s, `'`, `\'`, -1)
+	s = strings.Replace(s, `"`, `\"`, -1)
 
-	return output
+	return s
 }

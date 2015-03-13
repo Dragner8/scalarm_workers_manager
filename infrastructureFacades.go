@@ -2,9 +2,9 @@ package main
 
 type IInfrastructureFacade interface {
 	StatusCheck() ([]string, error)
-	ExtractSiMFiles(sm_record *Sm_record)
-	ResourceStatus(statusArray []string, jobID string) (string, error)
-	PrepareResource(ids, command string) (string, error)
+	ExtractSiMFiles(*SMRecord)
+	ResourceStatus([]string, *SMRecord) (string, error)
+	PrepareResource(string, string) (string, error)
 }
 
 func NewInfrastructureFacades() map[string]IInfrastructureFacade {

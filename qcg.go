@@ -12,23 +12,6 @@ type QcgFacade struct {
 	PLGridFacade
 }
 
-//receives command to execute
-//executes command, extracts resource ID
-//returns new job ID
-func (qf QcgFacade) PrepareResource(ids, command string) (string, error) {
-	stringOutput, err := execute(ids, command)
-	if err != nil {
-		return "", fmt.Errorf(stringOutput)
-	}
-
-	matches := regexp.MustCompile(`jobId = ([\S]+)`).FindStringSubmatch(stringOutput)
-	if len(matches) == 0 {
-		return "", fmt.Errorf(stringOutput)
-	}
-
-	return matches[1], nil
-}
-
 //gets resource states
 //returns array of resource states
 func (qf QcgFacade) StatusCheck() ([]string, error) {
@@ -47,16 +30,33 @@ func (qf QcgFacade) StatusCheck() ([]string, error) {
 	return strings.Split(stringOutput, "\n"), nil
 }
 
+//receives command to execute
+//executes command, extracts resource ID
+//returns new job ID
+func (qf QcgFacade) PrepareResource(ids, command string) (string, error) {
+	stringOutput, err := execute(ids, command)
+	if err != nil {
+		return "", fmt.Errorf(stringOutput)
+	}
+
+	matches := regexp.MustCompile(`jobId = ([\S]+)`).FindStringSubmatch(stringOutput)
+	if len(matches) == 0 {
+		return "", fmt.Errorf(stringOutput)
+	}
+
+	return matches[1], nil
+}
+
 //receives job ID
 //checks resource state based on job state
 //returns resource state
-func (qf QcgFacade) ResourceStatus(statusArray []string, jobID string) (string, error) {
-	if jobID == "" {
+func (qf QcgFacade) ResourceStatus(statusArray []string, smRecord *SMRecord) (string, error) {
+	if smRecord.JobID == "" {
 		return "available", nil
 	}
 
 	for _, status := range statusArray {
-		if strings.Contains(status, jobID) {
+		if strings.Contains(status, smRecord.JobID) {
 			matches := regexp.MustCompile(`(?:\S+\s+)(\S+).+`).FindStringSubmatch(status)
 			if len(matches) == 0 {
 				return "", fmt.Errorf(status)

@@ -23,11 +23,11 @@ func main() {
 	defer UnregisterWorking()
 
 	//declare variables - memory optimization
-	var sm_records []Sm_record
-	var sm_record Sm_record
-	var old_sm_record Sm_record
-	var raw_sm_records interface{}
-	var sm_records_count int
+	var smRecords []SMRecord
+	var smRecord SMRecord
+	var smRecordOld SMRecord
+	var smRecordsRaw interface{}
+	var smRecordsCount int
 
 	var infrastructure string
 	var statusArray []string
@@ -98,11 +98,11 @@ func main() {
 			logger.Info("Infrastractures reloaded, current infrastructures: %v", configData.Infrastructures)
 		}
 
-		sm_records_count = 0
+		smRecordsCount = 0
 		//infrastructures loop
 		for _, infrastructure = range configData.Infrastructures {
 			//get sm_records
-			if raw_sm_records, err = RepetitiveCaller(
+			if smRecordsRaw, err = RepetitiveCaller(
 				func() (interface{}, error) {
 					return emc.GetSimulationManagerRecords(infrastructure)
 				},
@@ -111,19 +111,19 @@ func main() {
 			); err != nil {
 				logger.Fatal("Unable to get simulation manager records for " + infrastructure)
 			} else {
-				sm_records = raw_sm_records.([]Sm_record)
+				smRecords = smRecordsRaw.([]SMRecord)
 			}
 
-			logger.Info("[%v] %v sm_records", infrastructure, len(sm_records))
-			if len(sm_records) > 0 {
+			logger.Info("[%v] %v sm_records", infrastructure, len(smRecords))
+			if len(smRecords) > 0 {
 				logger.Debug("\tScalarm ID               Name")
-				for _, sm_record = range sm_records {
-					logger.Debug("\t%v %v", sm_record.Id, sm_record.Name)
+				for _, smRecord = range smRecords {
+					logger.Debug("\t%v %v", smRecord.ID, smRecord.Name)
 				}
 			}
 
-			sm_records_count += len(sm_records)
-			if len(sm_records) == 0 {
+			smRecordsCount += len(smRecords)
+			if len(smRecords) == 0 {
 				continue
 			}
 
@@ -134,20 +134,20 @@ func main() {
 			}
 
 			//sm_records loop
-			for _, sm_record = range sm_records {
-				old_sm_record = sm_record
+			for _, smRecord = range smRecords {
+				smRecordOld = smRecord
 				if statusError != nil {
-					sm_record.Resource_status = "not_available"
-					sm_record.Error_log = statusError.Error()
+					smRecord.ResourceStatus = "not_available"
+					smRecord.ErrorLog = statusError.Error()
 				} else {
-					HandleSiM(infrastructureFacades[infrastructure], &sm_record, emc, infrastructure, statusArray)
+					HandleSiM(infrastructureFacades[infrastructure], &smRecord, emc, infrastructure, statusArray)
 				}
 
 				//notify state change
-				if old_sm_record != sm_record {
+				if smRecordOld != smRecord {
 					_, err = RepetitiveCaller(
 						func() (interface{}, error) {
-							return nil, emc.NotifyStateChange(&sm_record, &old_sm_record, infrastructure)
+							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure)
 						},
 						nil,
 						"NotifyStateChange",
@@ -159,7 +159,7 @@ func main() {
 			}
 		}
 
-		if !waitIndefinitely && sm_records_count == 0 {
+		if !waitIndefinitely && smRecordsCount == 0 {
 			if !noMoreRecords {
 				noMoreRecords = true
 				noMoreRecordsTime = time.Now()

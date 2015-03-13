@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -15,7 +16,7 @@ import (
 	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
-type ExperimentManagerConnector struct {
+type EMConnector struct {
 	login                    string
 	password                 string
 	experimentManagerAddress string
@@ -23,7 +24,7 @@ type ExperimentManagerConnector struct {
 	scheme                   string
 }
 
-func NewExperimentManagerConnector(login, password, certificatePath, scheme string, insecure bool) *ExperimentManagerConnector {
+func NewEMConnector(login, password, certificatePath, scheme string, insecure bool) *EMConnector {
 	var client *http.Client
 	tlsConfig := tls.Config{InsecureSkipVerify: insecure}
 
@@ -40,11 +41,11 @@ func NewExperimentManagerConnector(login, password, certificatePath, scheme stri
 
 	client = &http.Client{Transport: &http.Transport{TLSClientConfig: &tlsConfig}}
 
-	return &ExperimentManagerConnector{login: login, password: password, client: client, scheme: scheme}
+	return &EMConnector{login: login, password: password, client: client, scheme: scheme}
 }
 
-func (emc *ExperimentManagerConnector) GetExperimentManagerLocation(informationServiceAddress string) error {
-	resp, err := emc.client.Get(emc.scheme + "://" + informationServiceAddress + "/experiment_managers")
+func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress string) error {
+	resp, err := emc.client.Get(fmt.Sprintf("%v://%v/experiment_managers", emc.scheme, informationServiceAddress))
 	if err != nil {
 		return err
 	}
@@ -62,17 +63,17 @@ func (emc *ExperimentManagerConnector) GetExperimentManagerLocation(informationS
 	}
 
 	emc.experimentManagerAddress = experimentManagerAddresses[0] // TODO random
-	logger.Info("\tEM address:                  %v", emc.experimentManagerAddress)
+
 	return nil
 }
 
 type EMJsonResponse struct {
-	Status     string
-	Sm_records []Sm_record
+	Status    string     `json:"status"`
+	SMRecords []SMRecord `json:"sm_records"`
 }
 
-func (emc *ExperimentManagerConnector) GetSimulationManagerRecords(infrastructure string) ([]Sm_record, error) {
-	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers?"
+func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]SMRecord, error) {
+	urlString := fmt.Sprintf("%v://%v/simulation_managers?", emc.scheme, emc.experimentManagerAddress)
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
 	params.Add("options", "{\"states_not\":\"error\",\"onsite_monitoring\":true}")
@@ -104,12 +105,12 @@ func (emc *ExperimentManagerConnector) GetSimulationManagerRecords(infrastructur
 		return nil, errors.New("Damaged data")
 	}
 
-	return response.Sm_records, nil
+	return response.SMRecords, nil
 }
 
-func (emc *ExperimentManagerConnector) GetSimulationManagerCode(smRecordId string, infrastructure string) error {
+func (emc *EMConnector) GetSimulationManagerCode(smRecordId string, infrastructure string) error {
 	debug.FreeOSMemory()
-	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers/" + smRecordId + "/code?"
+	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v/code?", emc.scheme, emc.experimentManagerAddress, smRecordId)
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
 	urlString = urlString + params.Encode()
@@ -131,7 +132,7 @@ func (emc *ExperimentManagerConnector) GetSimulationManagerCode(smRecordId strin
 		return err
 	}
 
-	err = ioutil.WriteFile("sources_"+smRecordId+".zip", body, 0600)
+	err = ioutil.WriteFile(fmt.Sprintf("sources_%v.zip", smRecordId), body, 0600)
 	if err != nil {
 		return err
 	}
@@ -149,40 +150,42 @@ func inner_sm_record_marshal(current, old, name string, comma *bool, parameters 
 	}
 }
 
-func sm_record_marshal(sm_record, old_sm_record *Sm_record) string {
+func sm_record_marshal(smRecord, smRecordOld *SMRecord) string {
 	var parameters bytes.Buffer
 	parameters.WriteString("{")
 	comma := false
 
-	inner_sm_record_marshal(sm_record.State, old_sm_record.State, "state", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.SMUUID, smRecordOld.SMUUID, "sm_uuid", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Resource_status, old_sm_record.Resource_status, "resource_status", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.State, smRecordOld.State, "state", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Cmd_to_execute, old_sm_record.Cmd_to_execute, "cmd_to_execute", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.ResourceStatus, smRecordOld.ResourceStatus, "resource_status", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Cmd_to_execute_code, old_sm_record.Cmd_to_execute_code, "cmd_to_execute_code", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.CmdToExecute, smRecordOld.CmdToExecute, "cmd_to_execute", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Error_log, old_sm_record.Error_log, "error_log", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.CmdToExecuteCode, smRecordOld.CmdToExecuteCode, "cmd_to_execute_code", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Job_id, old_sm_record.Job_id, "job_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.ErrorLog, smRecordOld.ErrorLog, "error_log", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Pid, old_sm_record.Pid, "pid", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.Name, smRecordOld.Name, "name", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Vm_id, old_sm_record.Vm_id, "vm_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.JobID, smRecordOld.JobID, "job_id", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Res_id, old_sm_record.Res_id, "res_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.PID, smRecordOld.PID, "pid", &comma, &parameters)
 
-	inner_sm_record_marshal(sm_record.Name, old_sm_record.Name, "name", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.VMID, smRecordOld.VMID, "vm_id", &comma, &parameters)
+
+	inner_sm_record_marshal(smRecord.ResID, smRecordOld.ResID, "res_id", &comma, &parameters)
 
 	parameters.WriteString("}")
 
-	logger.Info("%v Update: %v", sm_record.GetIDs(), parameters.String())
+	logger.Info("%v Update: %v", smRecord.GetIDs(), parameters.String())
 	return parameters.String()
 }
 
-func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_record *Sm_record, infrastructure string) error { //do zmiany
+func (emc *EMConnector) NotifyStateChange(smRecord, smRecordOld *SMRecord, infrastructure string) error { //do zmiany
 
-	// sm_json, err := json.Marshal(sm_record)
+	// sm_json, err := json.Marshal(smRecord)
 	// if err != nil {
 	// 	return err
 	// }
@@ -190,10 +193,10 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	// data := url.Values{"parameters": {string(sm_json)}, "infrastructure": {infrastructure}}
 
 	//----
-	data := url.Values{"parameters": {sm_record_marshal(sm_record, old_sm_record)}, "infrastructure": {infrastructure}}
+	data := url.Values{"parameters": {sm_record_marshal(smRecord, smRecordOld)}, "infrastructure": {infrastructure}}
 	//----
 
-	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers/" + sm_record.Id
+	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v", emc.scheme, emc.experimentManagerAddress, smRecord.ID)
 
 	request, err := http.NewRequest("PUT", urlString, strings.NewReader(data.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -211,7 +214,7 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	if resp.StatusCode == 200 {
 		return nil
 	} else {
-		logger.Info("%v Status code: %v", sm_record.GetIDs(), resp.StatusCode)
+		logger.Info("%v Status code: %v", smRecord.GetIDs(), resp.StatusCode)
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -223,12 +226,12 @@ func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_recor
 	return nil
 }
 
-func escape(input string) string {
-	output := strings.Replace(input, "\n", "\\n", -1)
-	output = strings.Replace(output, "\r", "\\r", -1)
-	output = strings.Replace(output, "\t", "\\t", -1)
-	output = strings.Replace(output, `'`, `\'`, -1)
-	output = strings.Replace(output, `"`, `\"`, -1)
+func escape(s string) string {
+	s = strings.Replace(s, "\n", "\\n", -1)
+	s = strings.Replace(s, "\r", "\\r", -1)
+	s = strings.Replace(s, "\t", "\\t", -1)
+	s = strings.Replace(s, `'`, `\'`, -1)
+	s = strings.Replace(s, `"`, `\"`, -1)
 
-	return output
+	return s
 }

@@ -85,10 +85,10 @@ package main
 // 						available
 // */
 
-// //receives sm_record, ExperimentManager connector and infrastructure name
+// //receives sm_record, Experiment Manager connector and infrastructure name
 // //decides about action on sm and its resources
 // //returns nothing
-// func (this PrivateMachineFacade) HandleSM(sm_record *model.Sm_record, experimentManagerConnector *model.ExperimentManagerConnector, infrastructure string) {
+// func (this PrivateMachineFacade) HandleSM(sm_record *model.Sm_record, experimentManagerConnector *model.EMConnector, infrastructure string) {
 // 	switch sm_record.State {
 
 // 	case "created":

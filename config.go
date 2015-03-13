@@ -4,10 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
 type ConfigData struct {
@@ -24,17 +20,20 @@ type ConfigData struct {
 }
 
 func ReadConfiguration(configFile string) (*ConfigData, error) {
+	//read config file
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
 
+	//unmarshal config data
 	var configData ConfigData
 	err = json.Unmarshal(data, &configData)
 	if err != nil {
 		return nil, err
 	}
 
+	//find and replace "plgrid" infrastructure
 	for i, a := range configData.Infrastructures {
 		if a == "plgrid" {
 			configData.Infrastructures = append(configData.Infrastructures[:i], configData.Infrastructures[i+1:]...)
@@ -42,12 +41,14 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 		}
 	}
 
+	//special handling for tilde in path
 	if configData.ScalarmCertificatePath != "" {
 		if configData.ScalarmCertificatePath[0] == '~' {
 			configData.ScalarmCertificatePath = os.Getenv("HOME") + configData.ScalarmCertificatePath[1:]
 		}
 	}
 
+	//default scheme
 	if configData.ScalarmScheme == "" {
 		configData.ScalarmScheme = "https"
 	}
@@ -74,44 +75,4 @@ func AppendIfMissing(currentInfrastructures []string, newInfrastructures []strin
 		}
 	}
 	return currentInfrastructures, changed
-}
-
-func SignalCatcher(infrastructuresChannel chan []string, errorChannel chan error, configFile string) {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGUSR1)
-
-	for {
-		<-c
-		newConfig, err := ReadConfiguration(configFile)
-		if err != nil {
-			errorChannel <- err
-		}
-		infrastructuresChannel <- newConfig.Infrastructures
-	}
-}
-
-func SignalHandler(infrastructuresChannel chan []string, errorChannel chan error) []string {
-	//check for errors
-	select {
-	case err, ok := <-errorChannel:
-		if ok {
-			logger.Info("An error occured while reloading config: " + err.Error())
-		} else {
-			logger.Fatal("Channel closed!")
-		}
-	default:
-	}
-
-	//check for config changes
-	select {
-	case addedInfrastructures, ok := <-infrastructuresChannel:
-		if ok {
-			return addedInfrastructures
-		} else {
-			logger.Fatal("Channel closed!")
-		}
-	default:
-	}
-
-	return nil
 }

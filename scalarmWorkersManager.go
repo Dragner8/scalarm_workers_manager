@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"runtime/debug"
 	"time"
@@ -23,11 +24,11 @@ func main() {
 	defer UnregisterWorking()
 
 	//declare variables - memory optimization
-	var sm_records []Sm_record
-	var sm_record Sm_record
-	var old_sm_record Sm_record
-	var raw_sm_records interface{}
-	var sm_records_count int
+	var smRecords []SMRecord
+	var smRecord SMRecord
+	var smRecordOld SMRecord
+	var smRecordsRaw interface{}
+	var smRecordsCount int
 
 	var infrastructure string
 	var statusArray []string
@@ -45,7 +46,7 @@ func main() {
 	//read configuration
 	configData, err := ReadConfiguration(configFile)
 	if err != nil {
-		logger.Fatal("Could not read configuration file: " + configFile)
+		logger.Fatal(fmt.Sprintf("Could not read configuration file: %v", configFile))
 	}
 
 	//setup verbosity
@@ -71,13 +72,13 @@ func main() {
 	}
 
 	//create EM connector
-	experimentManagerConnector := NewExperimentManagerConnector(configData.Login, configData.Password,
+	emc := NewEMConnector(configData.Login, configData.Password,
 		configData.ScalarmCertificatePath, configData.ScalarmScheme, configData.InsecureSSL)
 
 	//get experiment manager location
 	if _, err := RepetitiveCaller(
 		func() (interface{}, error) {
-			return nil, experimentManagerConnector.GetExperimentManagerLocation(configData.InformationServiceAddress)
+			return nil, emc.GetExperimentManagerLocation(configData.InformationServiceAddress)
 		},
 		nil,
 		"GetExperimentManagerLocation",
@@ -98,32 +99,32 @@ func main() {
 			logger.Info("Infrastractures reloaded, current infrastructures: %v", configData.Infrastructures)
 		}
 
-		sm_records_count = 0
+		smRecordsCount = 0
 		//infrastructures loop
 		for _, infrastructure = range configData.Infrastructures {
 			//get sm_records
-			if raw_sm_records, err = RepetitiveCaller(
+			if smRecordsRaw, err = RepetitiveCaller(
 				func() (interface{}, error) {
-					return experimentManagerConnector.GetSimulationManagerRecords(infrastructure)
+					return emc.GetSimulationManagerRecords(infrastructure)
 				},
 				nil,
 				"GetSimulationManagerRecords",
 			); err != nil {
-				logger.Fatal("Unable to get simulation manager records for " + infrastructure)
+				logger.Fatal(fmt.Sprintf("Unable to get simulation manager records for %v", infrastructure))
 			} else {
-				sm_records = raw_sm_records.([]Sm_record)
+				smRecords = smRecordsRaw.([]SMRecord)
 			}
 
-			logger.Info("[%v] %v sm_records", infrastructure, len(sm_records))
-			if len(sm_records) > 0 {
+			logger.Info("[%v] %v sm_records", infrastructure, len(smRecords))
+			if len(smRecords) > 0 {
 				logger.Debug("\tScalarm ID               Name")
-				for _, sm_record = range sm_records {
-					logger.Debug("\t%v %v", sm_record.Id, sm_record.Name)
+				for _, smRecord = range smRecords {
+					logger.Debug("\t%v %v", smRecord.ID, smRecord.Name)
 				}
 			}
 
-			sm_records_count += len(sm_records)
-			if len(sm_records) == 0 {
+			smRecordsCount += len(smRecords)
+			if len(smRecords) == 0 {
 				continue
 			}
 
@@ -134,32 +135,39 @@ func main() {
 			}
 
 			//sm_records loop
-			for _, sm_record = range sm_records {
-				old_sm_record = sm_record
+			for _, smRecord = range smRecords {
+				smRecordOld = smRecord
+
 				if statusError != nil {
-					sm_record.Resource_status = "not_available"
-					sm_record.Error_log = statusError.Error()
+					//could not read status for current infrastructure
+					smRecord.ResourceStatus = "not_available"
+					smRecord.ErrorLog = statusError.Error()
 				} else {
-					infrastructureFacades[infrastructure].HandleSM(&sm_record, experimentManagerConnector, infrastructure, statusArray)
+					//handle SiM
+					err = HandleSiM(infrastructureFacades[infrastructure], &smRecord, infrastructure, emc, statusArray)
+					if err != nil {
+						smRecord.ErrorLog = err.Error()
+						smRecord.ResourceStatus = "error"
+					}
 				}
 
-				//notify state change
-				if old_sm_record != sm_record {
-					_, err = RepetitiveCaller(
+				//notify state change if needed
+				if smRecordOld != smRecord {
+					if _, err = RepetitiveCaller(
 						func() (interface{}, error) {
-							return nil, experimentManagerConnector.NotifyStateChange(&sm_record, &old_sm_record, infrastructure)
+							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure)
 						},
 						nil,
 						"NotifyStateChange",
-					)
-					if err != nil {
+					); err != nil {
 						logger.Fatal("Unable to update simulation manager record")
 					}
 				}
 			}
 		}
 
-		if !waitIndefinitely && sm_records_count == 0 {
+		//wait for new records if needed
+		if !waitIndefinitely && smRecordsCount == 0 {
 			if !noMoreRecords {
 				noMoreRecords = true
 				noMoreRecordsTime = time.Now()

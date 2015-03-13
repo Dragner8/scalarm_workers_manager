@@ -71,13 +71,13 @@ func main() {
 	}
 
 	//create EM connector
-	experimentManagerConnector := NewExperimentManagerConnector(configData.Login, configData.Password,
+	emc := NewEMConnector(configData.Login, configData.Password,
 		configData.ScalarmCertificatePath, configData.ScalarmScheme, configData.InsecureSSL)
 
 	//get experiment manager location
 	if _, err := RepetitiveCaller(
 		func() (interface{}, error) {
-			return nil, experimentManagerConnector.GetExperimentManagerLocation(configData.InformationServiceAddress)
+			return nil, emc.GetExperimentManagerLocation(configData.InformationServiceAddress)
 		},
 		nil,
 		"GetExperimentManagerLocation",
@@ -104,7 +104,7 @@ func main() {
 			//get sm_records
 			if raw_sm_records, err = RepetitiveCaller(
 				func() (interface{}, error) {
-					return experimentManagerConnector.GetSimulationManagerRecords(infrastructure)
+					return emc.GetSimulationManagerRecords(infrastructure)
 				},
 				nil,
 				"GetSimulationManagerRecords",
@@ -140,14 +140,14 @@ func main() {
 					sm_record.Resource_status = "not_available"
 					sm_record.Error_log = statusError.Error()
 				} else {
-					infrastructureFacades[infrastructure].HandleSM(&sm_record, experimentManagerConnector, infrastructure, statusArray)
+					HandleSiM(infrastructureFacades[infrastructure], &sm_record, emc, infrastructure, statusArray)
 				}
 
 				//notify state change
 				if old_sm_record != sm_record {
 					_, err = RepetitiveCaller(
 						func() (interface{}, error) {
-							return nil, experimentManagerConnector.NotifyStateChange(&sm_record, &old_sm_record, infrastructure)
+							return nil, emc.NotifyStateChange(&sm_record, &old_sm_record, infrastructure)
 						},
 						nil,
 						"NotifyStateChange",

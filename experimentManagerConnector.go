@@ -15,7 +15,7 @@ import (
 	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
-type ExperimentManagerConnector struct {
+type EMConnector struct {
 	login                    string
 	password                 string
 	experimentManagerAddress string
@@ -23,7 +23,7 @@ type ExperimentManagerConnector struct {
 	scheme                   string
 }
 
-func NewExperimentManagerConnector(login, password, certificatePath, scheme string, insecure bool) *ExperimentManagerConnector {
+func NewEMConnector(login, password, certificatePath, scheme string, insecure bool) *EMConnector {
 	var client *http.Client
 	tlsConfig := tls.Config{InsecureSkipVerify: insecure}
 
@@ -40,10 +40,10 @@ func NewExperimentManagerConnector(login, password, certificatePath, scheme stri
 
 	client = &http.Client{Transport: &http.Transport{TLSClientConfig: &tlsConfig}}
 
-	return &ExperimentManagerConnector{login: login, password: password, client: client, scheme: scheme}
+	return &EMConnector{login: login, password: password, client: client, scheme: scheme}
 }
 
-func (emc *ExperimentManagerConnector) GetExperimentManagerLocation(informationServiceAddress string) error {
+func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress string) error {
 	resp, err := emc.client.Get(emc.scheme + "://" + informationServiceAddress + "/experiment_managers")
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ type EMJsonResponse struct {
 	Sm_records []Sm_record
 }
 
-func (emc *ExperimentManagerConnector) GetSimulationManagerRecords(infrastructure string) ([]Sm_record, error) {
+func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]Sm_record, error) {
 	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers?"
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
@@ -107,7 +107,7 @@ func (emc *ExperimentManagerConnector) GetSimulationManagerRecords(infrastructur
 	return response.Sm_records, nil
 }
 
-func (emc *ExperimentManagerConnector) GetSimulationManagerCode(smRecordId string, infrastructure string) error {
+func (emc *EMConnector) GetSimulationManagerCode(smRecordId string, infrastructure string) error {
 	debug.FreeOSMemory()
 	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers/" + smRecordId + "/code?"
 	params := url.Values{}
@@ -180,7 +180,7 @@ func sm_record_marshal(sm_record, old_sm_record *Sm_record) string {
 	return parameters.String()
 }
 
-func (emc *ExperimentManagerConnector) NotifyStateChange(sm_record, old_sm_record *Sm_record, infrastructure string) error { //do zmiany
+func (emc *EMConnector) NotifyStateChange(sm_record, old_sm_record *Sm_record, infrastructure string) error { //do zmiany
 
 	// sm_json, err := json.Marshal(sm_record)
 	// if err != nil {

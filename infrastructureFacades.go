@@ -2,13 +2,15 @@ package main
 
 type IInfrastructureFacade interface {
 	StatusCheck() ([]string, error)
-	HandleSM(*Sm_record, *ExperimentManagerConnector, string, []string)
+	ExtractSiMFiles(sm_record *Sm_record)
+	ResourceStatus(statusArray []string, jobID string) (string, error)
+	PrepareResource(ids, command string) (string, error)
 }
 
 func NewInfrastructureFacades() map[string]IInfrastructureFacade {
 	return map[string]IInfrastructureFacade{
+		"qsub": QsubFacade{PLGridFacade{Name: "qsub"}},
+		"qcg":  QcgFacade{PLGridFacade{Name: "qcg"}},
 		//"private_machine": PrivateMachineFacade{},
-		"qsub": QsubFacade{},
-		"qcg":  QcgFacade{},
 	}
 }

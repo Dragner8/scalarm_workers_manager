@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -44,7 +45,7 @@ func NewEMConnector(login, password, certificatePath, scheme string, insecure bo
 }
 
 func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress string) error {
-	resp, err := emc.client.Get(emc.scheme + "://" + informationServiceAddress + "/experiment_managers")
+	resp, err := emc.client.Get(fmt.Sprintf("%v://%v/experiment_managers", emc.scheme, informationServiceAddress))
 	if err != nil {
 		return err
 	}
@@ -62,7 +63,7 @@ func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress s
 	}
 
 	emc.experimentManagerAddress = experimentManagerAddresses[0] // TODO random
-	logger.Info("\tEM address:                  %v", emc.experimentManagerAddress)
+
 	return nil
 }
 
@@ -72,7 +73,7 @@ type EMJsonResponse struct {
 }
 
 func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]SMRecord, error) {
-	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers?"
+	urlString := fmt.Sprintf("%v://%v/simulation_managers?", emc.scheme, emc.experimentManagerAddress)
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
 	params.Add("options", "{\"states_not\":\"error\",\"onsite_monitoring\":true}")
@@ -109,7 +110,7 @@ func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]SM
 
 func (emc *EMConnector) GetSimulationManagerCode(smRecordId string, infrastructure string) error {
 	debug.FreeOSMemory()
-	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers/" + smRecordId + "/code?"
+	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v/code?", emc.scheme, emc.experimentManagerAddress, smRecordId)
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
 	urlString = urlString + params.Encode()
@@ -131,7 +132,7 @@ func (emc *EMConnector) GetSimulationManagerCode(smRecordId string, infrastructu
 		return err
 	}
 
-	err = ioutil.WriteFile("sources_"+smRecordId+".zip", body, 0600)
+	err = ioutil.WriteFile(fmt.Sprintf("sources_%v.zip", smRecordId), body, 0600)
 	if err != nil {
 		return err
 	}
@@ -195,7 +196,7 @@ func (emc *EMConnector) NotifyStateChange(smRecord, smRecordOld *SMRecord, infra
 	data := url.Values{"parameters": {sm_record_marshal(smRecord, smRecordOld)}, "infrastructure": {infrastructure}}
 	//----
 
-	urlString := emc.scheme + "://" + emc.experimentManagerAddress + "/simulation_managers/" + smRecord.ID
+	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v", emc.scheme, emc.experimentManagerAddress, smRecord.ID)
 
 	request, err := http.NewRequest("PUT", urlString, strings.NewReader(data.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")

@@ -22,7 +22,7 @@ func execute(ids, command string) (string, error) {
 
 // func scriptExecute(command string) (string, error) {
 
-// 	cmd := []byte("#!/bin/bash\n" + command + "\n")
+// 	cmd := []byte(fmt.Sprintf("#!/bin/bash\n%v\n", command))
 // 	ioutil.WriteFile("./s.sh", cmd, 0755)
 // 	output, err := exec.Command("./s.sh").CombinedOutput()
 // 	stringOutput := string(output[:])

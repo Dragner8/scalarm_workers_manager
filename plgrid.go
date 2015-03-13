@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
@@ -8,28 +10,23 @@ type PLGridFacade struct {
 	Name string
 }
 
-func (plgf PLGridFacade) ExtractSiMFiles(smRecord *SMRecord) {
+func (plgf PLGridFacade) ExtractSiMFiles(smRecord *SMRecord) error {
 
 	//extract first zip
-	err := extract("sources_"+smRecord.ID+".zip", ".")
+	err := extract(fmt.Sprintf("sources_%v.zip", smRecord.ID), ".")
 	if err != nil {
-		smRecord.ErrorLog = err.Error()
-		smRecord.ResourceStatus = "error"
-		return
+		return err
 	}
 	//move second zip one directory up
-	_, err = executeSilent("mv scalarm_simulation_manager_code_" + smRecord.SMUUID + "/* .")
+	_, err = executeSilent(fmt.Sprintf("mv scalarm_simulation_manager_code_%v/* .", smRecord.SMUUID))
 	if err != nil {
-		smRecord.ErrorLog = err.Error()
-		smRecord.ResourceStatus = "error"
-		return
+		return err
 	}
 	//remove both zips and catalog left from first unzip
-	_, err = executeSilent("rm -rf  sources_" + smRecord.ID + ".zip scalarm_simulation_manager_code_" + smRecord.SMUUID)
+	_, err = executeSilent(fmt.Sprintf("rm -rf  sources_%v.zip scalarm_simulation_manager_code_%v", smRecord.ID, smRecord.SMUUID))
 	if err != nil {
-		smRecord.ErrorLog = err.Error()
-		smRecord.ResourceStatus = "error"
-		return
+		return err
 	}
 	logger.Debug("Code files extracted")
+	return nil
 }

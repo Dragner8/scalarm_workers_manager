@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"runtime/debug"
 	"time"
@@ -45,7 +46,7 @@ func main() {
 	//read configuration
 	configData, err := ReadConfiguration(configFile)
 	if err != nil {
-		logger.Fatal("Could not read configuration file: " + configFile)
+		logger.Fatal(fmt.Sprintf("Could not read configuration file: %v", configFile))
 	}
 
 	//setup verbosity
@@ -109,7 +110,7 @@ func main() {
 				nil,
 				"GetSimulationManagerRecords",
 			); err != nil {
-				logger.Fatal("Unable to get simulation manager records for " + infrastructure)
+				logger.Fatal(fmt.Sprintf("Unable to get simulation manager records for %v", infrastructure))
 			} else {
 				smRecords = smRecordsRaw.([]SMRecord)
 			}
@@ -136,29 +137,36 @@ func main() {
 			//sm_records loop
 			for _, smRecord = range smRecords {
 				smRecordOld = smRecord
+
 				if statusError != nil {
+					//could not read status for current infrastructure
 					smRecord.ResourceStatus = "not_available"
 					smRecord.ErrorLog = statusError.Error()
 				} else {
-					HandleSiM(infrastructureFacades[infrastructure], &smRecord, emc, infrastructure, statusArray)
+					//handle SiM
+					err = HandleSiM(infrastructureFacades[infrastructure], &smRecord, infrastructure, emc, statusArray)
+					if err != nil {
+						smRecord.ErrorLog = err.Error()
+						smRecord.ResourceStatus = "error"
+					}
 				}
 
-				//notify state change
+				//notify state change if needed
 				if smRecordOld != smRecord {
-					_, err = RepetitiveCaller(
+					if _, err = RepetitiveCaller(
 						func() (interface{}, error) {
 							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure)
 						},
 						nil,
 						"NotifyStateChange",
-					)
-					if err != nil {
+					); err != nil {
 						logger.Fatal("Unable to update simulation manager record")
 					}
 				}
 			}
 		}
 
+		//wait for new records if needed
 		if !waitIndefinitely && smRecordsCount == 0 {
 			if !noMoreRecords {
 				noMoreRecords = true

@@ -14,7 +14,7 @@ func executeSilent(command string) (string, error) {
 }
 
 func execute(ids, command string) (string, error) {
-	logger.Debug("%v Executing: %v", ids, command)
+	logger.Info("%v Executing: %v", ids, command)
 	stringOutput, err := executeSilent(command)
 	logger.Debug("%v Response: %v", ids, stringOutput)
 	return stringOutput, err

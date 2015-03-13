@@ -24,11 +24,11 @@ You can download Scalarm Workers Manager directly from GitHub. You have to downl
 ``` 
 go get github.com/scalarm/scalarm_workers_manager
 ``` 
-Now you can install monitoring: 
+Now you can install Scalarm Workers Manager: 
 ```` 
 go install github.com/scalarm/scalarm_workers_manager
 ```` 
-This command will install monitoring in $GOPATH/bin. It's name will be scalarm_workers_manager.
+This command will install Scalarm Workers Manager in $GOPATH/bin. It's name will be scalarm_workers_manager.
 
 Config 
 -------- 

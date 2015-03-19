@@ -76,7 +76,8 @@ func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]SM
 	urlString := fmt.Sprintf("%v://%v/simulation_managers?", emc.scheme, emc.experimentManagerAddress)
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
-	params.Add("options", "{\"states_not\":\"error\",\"onsite_monitoring\":true}")
+	params.Add("states_not", "error")
+	params.Add("onsite_monitoring", "true")
 	urlString = urlString + params.Encode()
 
 	request, err := http.NewRequest("GET", urlString, nil)

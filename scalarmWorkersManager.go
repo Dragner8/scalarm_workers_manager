@@ -30,7 +30,7 @@ func main() {
 	var smRecordsRaw interface{}
 	var smRecordsCount int
 
-	var infrastructure string
+	var infrastructure Infrastructure
 	var statusArray []string
 	var statusError error
 	var err error
@@ -39,7 +39,7 @@ func main() {
 	var noMoreRecordsTime time.Time
 
 	//listen for signals
-	infrastructuresChannel := make(chan []string, 10)
+	infrastructuresChannel := make(chan []Infrastructure, 10)
 	errorChannel := make(chan error, 1)
 	go SignalCatcher(infrastructuresChannel, errorChannel, configFile)
 
@@ -110,12 +110,12 @@ func main() {
 				nil,
 				"GetSimulationManagerRecords",
 			); err != nil {
-				logger.Fatal(fmt.Sprintf("Unable to get simulation manager records for %v", infrastructure))
+				logger.Fatal(fmt.Sprintf("Unable to get simulation manager records for %v", infrastructure.Name))
 			} else {
 				smRecords = smRecordsRaw.([]SMRecord)
 			}
 
-			logger.Info("[%v] %v sm_records", infrastructure, len(smRecords))
+			logger.Info("[%v] %v sm_records", infrastructure.Name, len(smRecords))
 			if len(smRecords) > 0 {
 				logger.Debug("\tScalarm ID               Name")
 				for _, smRecord = range smRecords {
@@ -129,9 +129,9 @@ func main() {
 			}
 
 			//check status
-			statusArray, statusError = infrastructureFacades[infrastructure].StatusCheck()
+			statusArray, statusError = infrastructureFacades[infrastructure.Name].StatusCheck()
 			if statusError != nil {
-				logger.Info("Cannot get status for %v infrastructure", infrastructure)
+				logger.Info("Cannot get status for %v infrastructure", infrastructure.Name)
 			}
 
 			//sm_records loop
@@ -144,7 +144,7 @@ func main() {
 					smRecord.ErrorLog = statusError.Error()
 				} else {
 					//handle SiM
-					err = HandleSiM(infrastructureFacades[infrastructure], &smRecord, infrastructure, emc, statusArray)
+					err = HandleSiM(infrastructureFacades[infrastructure.Name], &smRecord, infrastructure.Name, emc, statusArray)
 					if err != nil {
 						smRecord.ErrorLog = err.Error()
 						smRecord.ResourceStatus = "error"
@@ -155,7 +155,7 @@ func main() {
 				if smRecordOld != smRecord {
 					if _, err = RepetitiveCaller(
 						func() (interface{}, error) {
-							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure)
+							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure.Name)
 						},
 						nil,
 						"NotifyStateChange",

@@ -10,13 +10,19 @@ type ConfigData struct {
 	InformationServiceAddress string
 	Login                     string
 	Password                  string
-	Infrastructures           []string
+	Infrastructures           []Infrastructure
 	ScalarmCertificatePath    string
 	ScalarmScheme             string
 	InsecureSSL               bool
 	ExitTimeoutSecs           int
 	ProbeFrequencySecs        int
 	VerboseMode               bool
+}
+
+type Infrastructure struct {
+	Name string
+	Host string
+	Port string
 }
 
 func ReadConfiguration(configFile string) (*ConfigData, error) {
@@ -35,9 +41,10 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 
 	//find and replace "plgrid" infrastructure
 	for i, a := range configData.Infrastructures {
-		if a == "plgrid" {
+		if a.Name == "plgrid" {
 			configData.Infrastructures = append(configData.Infrastructures[:i], configData.Infrastructures[i+1:]...)
-			configData.Infrastructures, _ = AppendIfMissing(configData.Infrastructures, []string{"qsub", "qcg"})
+			configData.Infrastructures, _ = AppendIfMissing(configData.Infrastructures, []Infrastructure{Infrastructure{Name: "qsub"}})
+			configData.Infrastructures, _ = AppendIfMissing(configData.Infrastructures, []Infrastructure{Infrastructure{Name: "qcg"}})
 		}
 	}
 
@@ -56,23 +63,23 @@ func ReadConfiguration(configFile string) (*ConfigData, error) {
 	return &configData, nil
 }
 
-func innerAppendIfMissing(currentInfrastructures []string, newInfrastructure string) ([]string, bool) {
-	for _, c := range currentInfrastructures {
-		if c == newInfrastructure {
-			return currentInfrastructures, false
+func innerAppendIfMissing(current []Infrastructure, found Infrastructure) ([]Infrastructure, bool) {
+	for _, c := range current {
+		if c == found {
+			return current, false
 		}
 	}
-	return append(currentInfrastructures, newInfrastructure), true
+	return append(current, found), true
 }
 
-func AppendIfMissing(currentInfrastructures []string, newInfrastructures []string) ([]string, bool) {
+func AppendIfMissing(current []Infrastructure, found []Infrastructure) ([]Infrastructure, bool) {
 	changed := false
-	for _, n := range newInfrastructures {
+	for _, f := range found {
 		change := false
-		currentInfrastructures, change = innerAppendIfMissing(currentInfrastructures, n)
+		current, change = innerAppendIfMissing(current, f)
 		if change {
 			changed = true
 		}
 	}
-	return currentInfrastructures, changed
+	return current, changed
 }

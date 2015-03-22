@@ -72,12 +72,17 @@ type EMJsonResponse struct {
 	SMRecords []SMRecord `json:"sm_records"`
 }
 
-func (emc *EMConnector) GetSimulationManagerRecords(infrastructure string) ([]SMRecord, error) {
+func (emc *EMConnector) GetSimulationManagerRecords(infrastructure Infrastructure) ([]SMRecord, error) {
 	urlString := fmt.Sprintf("%v://%v/simulation_managers?", emc.scheme, emc.experimentManagerAddress)
 	params := url.Values{}
-	params.Add("infrastructure", infrastructure)
+	params.Add("infrastructure", infrastructure.Name)
 	params.Add("states_not", "error")
 	params.Add("onsite_monitoring", "true")
+	if infrastructure.Name == "private_machine" {
+		params.Add("host", infrastructure.Host)
+		params.Add("port", infrastructure.Port)
+	}
+
 	urlString = urlString + params.Encode()
 
 	request, err := http.NewRequest("GET", urlString, nil)

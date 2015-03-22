@@ -8,7 +8,7 @@ import (
 	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
-func SignalCatcher(infrastructuresChannel chan []string, errorChannel chan error, configFile string) {
+func SignalCatcher(infrastructuresChannel chan []Infrastructure, errorChannel chan error, configFile string) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGUSR1)
 
@@ -22,7 +22,7 @@ func SignalCatcher(infrastructuresChannel chan []string, errorChannel chan error
 	}
 }
 
-func SignalHandler(infrastructuresChannel chan []string, errorChannel chan error) []string {
+func SignalHandler(infrastructuresChannel chan []Infrastructure, errorChannel chan error) []Infrastructure {
 	//check for errors
 	select {
 	case err, ok := <-errorChannel:

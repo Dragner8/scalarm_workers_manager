@@ -52,7 +52,7 @@ func HandleSiM(facade IInfrastructureFacade, smRecord *SMRecord, infrastructure 
 			return err
 		}
 		logger.Info("%v Assigned job_id: %v", ids, jobID)
-		smRecord.JobID = jobID
+		facade.SetId(smRecord, jobID)
 
 	} else if smRecord.CmdToExecuteCode == "stop" {
 

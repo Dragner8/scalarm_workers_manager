@@ -22,6 +22,11 @@ func (pmf PrivateMachineFacade) StatusCheck() ([]string, error) {
 	return strings.Split(stringOutput, "\n"), nil
 }
 
+//sets id for proper infrastructure
+func (pmf PrivateMachineFacade) SetId(smRecord *SMRecord, id string) {
+	smRecord.PID = id
+}
+
 //receives command to execute
 //executes command, extracts resource ID
 //returns new job ID
@@ -31,7 +36,7 @@ func (pmf PrivateMachineFacade) PrepareResource(ids, command string) (string, er
 		return "", fmt.Errorf(stringOutput)
 	}
 
-	return stringOutput, nil
+	return strings.Trim(stringOutput, " \t\n"), nil
 }
 
 func (pmf PrivateMachineFacade) ExtractSiMFiles(smRecord *SMRecord) error {

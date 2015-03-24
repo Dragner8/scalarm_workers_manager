@@ -8,6 +8,11 @@ import (
 
 type PLGridFacade struct{}
 
+//sets id for proper infrastructure
+func (plgf PLGridFacade) SetId(smRecord *SMRecord, id string) {
+	smRecord.JobID = id
+}
+
 func (plgf PLGridFacade) ExtractSiMFiles(smRecord *SMRecord) error {
 
 	//extract first zip

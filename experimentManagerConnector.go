@@ -62,7 +62,7 @@ func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress s
 		return err
 	}
 
-	emc.experimentManagerAddress = experimentManagerAddresses[0] // TODO random
+	emc.experimentManagerAddress = experimentManagerAddresses[0] // TODO: random
 
 	return nil
 }
@@ -79,8 +79,7 @@ func (emc *EMConnector) GetSimulationManagerRecords(infrastructure Infrastructur
 	params.Add("states_not", "error")
 	params.Add("onsite_monitoring", "true")
 	if infrastructure.Name == "private_machine" {
-		params.Add("host", infrastructure.Host)
-		params.Add("port", infrastructure.Port)
+		params.Add("credentials_id", infrastructure.CredentialsID)
 	}
 
 	urlString = urlString + params.Encode()

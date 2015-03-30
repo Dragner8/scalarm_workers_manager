@@ -20,9 +20,8 @@ type ConfigData struct {
 }
 
 type Infrastructure struct {
-	Name string
-	Host string
-	Port string
+	Name          string `json:"name"`
+	CredentialsID string `json:"credentials_id"`
 }
 
 func ReadConfiguration(configFile string) (*ConfigData, error) {

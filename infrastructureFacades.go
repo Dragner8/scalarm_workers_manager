@@ -2,6 +2,7 @@ package main
 
 type IInfrastructureFacade interface {
 	StatusCheck() ([]string, error)
+	SetId(*SMRecord, string)
 	PrepareResource(string, string) (string, error)
 	ExtractSiMFiles(*SMRecord) error
 	ResourceStatus([]string, *SMRecord) (string, error)
@@ -9,8 +10,8 @@ type IInfrastructureFacade interface {
 
 func NewInfrastructureFacades() map[string]IInfrastructureFacade {
 	return map[string]IInfrastructureFacade{
-		"qsub": QsubFacade{PLGridFacade{Name: "qsub"}},
-		"qcg":  QcgFacade{PLGridFacade{Name: "qcg"}},
-		//"private_machine": PrivateMachineFacade{},
+		"qsub":            QsubFacade{PLGridFacade{}},
+		"qcg":             QcgFacade{PLGridFacade{}},
+		"private_machine": PrivateMachineFacade{},
 	}
 }

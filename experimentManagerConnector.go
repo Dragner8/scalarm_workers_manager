@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -62,7 +63,8 @@ func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress s
 		return err
 	}
 
-	emc.experimentManagerAddress = experimentManagerAddresses[0] // TODO: random
+	index := rand.Intn(len(experimentManagerAddresses))
+	emc.experimentManagerAddress = experimentManagerAddresses[index]
 
 	return nil
 }

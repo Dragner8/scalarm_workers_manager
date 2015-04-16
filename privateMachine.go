@@ -46,21 +46,15 @@ func (pmf PrivateMachineFacade) ExtractSiMFiles(smRecord *SMRecord) error {
 	if err != nil {
 		return err
 	}
+
 	//move second zip one directory up
 	_, err = executeSilent(fmt.Sprintf("mv scalarm_simulation_manager_code_%v/* .", smRecord.SMUUID))
 	if err != nil {
 		return err
 	}
-	//extract second zip
-	err = extract(fmt.Sprintf("scalarm_simulation_manager_%v.zip", smRecord.SMUUID), ".")
-	if err != nil {
-		return err
-	}
-	//remove both zips and catalog left from first unzip
-	_, err = executeSilent(
-		fmt.Sprintf(
-			"rm -rf  sources_%v.zip scalarm_simulation_manager_code_%v scalarm_simulation_manager_%v.zip",
-			smRecord.ID, smRecord.SMUUID, smRecord.SMUUID))
+
+	//remove zip and catalog left from first unzip
+	_, err = executeSilent(fmt.Sprintf("rm -rf sources_%v.zip scalarm_simulation_manager_code_%v", smRecord.ID, smRecord.SMUUID))
 	if err != nil {
 		return err
 	}

@@ -18,11 +18,11 @@ import (
 )
 
 type EMConnector struct {
-	login                    string
-	password                 string
-	experimentManagerAddress string
-	client                   *http.Client
-	scheme                   string
+	login                      string
+	password                   string
+	experimentManagerAddresses []string
+	client                     *http.Client
+	scheme                     string
 }
 
 func NewEMConnector(login, password, certificatePath, scheme string, insecure bool) *EMConnector {
@@ -45,6 +45,11 @@ func NewEMConnector(login, password, certificatePath, scheme string, insecure bo
 	return &EMConnector{login: login, password: password, client: client, scheme: scheme}
 }
 
+func (emc *EMConnector) experimentManagerAddress() string {
+	index := rand.Intn(len(emc.experimentManagerAddresses))
+	return emc.experimentManagerAddresses[index]
+}
+
 func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress string) error {
 	resp, err := emc.client.Get(fmt.Sprintf("%v://%v/experiment_managers", emc.scheme, informationServiceAddress))
 	if err != nil {
@@ -57,14 +62,10 @@ func (emc *EMConnector) GetExperimentManagerLocation(informationServiceAddress s
 		return err
 	}
 
-	var experimentManagerAddresses []string
-	err = json.Unmarshal(body, &experimentManagerAddresses)
+	err = json.Unmarshal(body, &emc.experimentManagerAddresses)
 	if err != nil {
 		return err
 	}
-
-	index := rand.Intn(len(experimentManagerAddresses))
-	emc.experimentManagerAddress = experimentManagerAddresses[index]
 
 	return nil
 }
@@ -75,7 +76,7 @@ type EMJsonResponse struct {
 }
 
 func (emc *EMConnector) GetSimulationManagerRecords(infrastructure Infrastructure) ([]SMRecord, error) {
-	urlString := fmt.Sprintf("%v://%v/simulation_managers?", emc.scheme, emc.experimentManagerAddress)
+	urlString := fmt.Sprintf("%v://%v/simulation_managers?", emc.scheme, emc.experimentManagerAddress())
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure.Name)
 	params.Add("states_not", "error")
@@ -117,7 +118,7 @@ func (emc *EMConnector) GetSimulationManagerRecords(infrastructure Infrastructur
 
 func (emc *EMConnector) GetSimulationManagerCode(smRecordId string, infrastructure string) error {
 	debug.FreeOSMemory()
-	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v/code?", emc.scheme, emc.experimentManagerAddress, smRecordId)
+	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v/code?", emc.scheme, emc.experimentManagerAddress(), smRecordId)
 	params := url.Values{}
 	params.Add("infrastructure", infrastructure)
 	urlString = urlString + params.Encode()
@@ -203,7 +204,7 @@ func (emc *EMConnector) NotifyStateChange(smRecord, smRecordOld *SMRecord, infra
 	data := url.Values{"parameters": {sm_record_marshal(smRecord, smRecordOld)}, "infrastructure": {infrastructure}}
 	//----
 
-	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v", emc.scheme, emc.experimentManagerAddress, smRecord.ID)
+	urlString := fmt.Sprintf("%v://%v/simulation_managers/%v", emc.scheme, emc.experimentManagerAddress(), smRecord.ID)
 
 	request, err := http.NewRequest("PUT", urlString, strings.NewReader(data.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")

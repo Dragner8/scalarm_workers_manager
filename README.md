@@ -1,11 +1,11 @@
-Scalarm Monitoring
+Scalarm Workers Manager
 ============ 
 
 Installation guide: 
 ---------------------- 
 Go 
 -- 
-To build and install monitoring you need to install go programming language. 
+To build and install Scalarm Workers Manager you need to install go programming language. 
 You can install it from official binary distribution: 
 
 https://golang.org/doc/install
@@ -20,19 +20,19 @@ https://golang.org/doc/code.html#GOPATH
 
 Installation 
 -------------- 
-You can download it directly from GitHub. You have to download it into your $GOPATH/src folder 
+You can download Scalarm Workers Manager directly from GitHub. You have to download it into your $GOPATH/src folder 
 ``` 
-git clone https://github.com/mpaciore/scalarm_monitoring
+go get github.com/scalarm/scalarm_workers_manager
 ``` 
-Now you can install monitoring: 
+Now you can install Scalarm Workers Manager: 
 ```` 
-go install scalarm_monitoring 
+go install github.com/scalarm/scalarm_workers_manager
 ```` 
-This command will install monitoring in $GOPATH/bin. It's name will be scalarm_monitoring.
+This command will install Scalarm Workers Manager in $GOPATH/bin. It's name will be scalarm_workers_manager.
 
 Config 
 -------- 
-The config folder contains single file config.json that contains required informations for monitor:
+The config folder contains single file config.json that contains required informations for Scalarm Workers Manager:
 
 * InformationServiceAddress - address of working Information Service
 * Login, Password - Scalarm credentials
@@ -40,6 +40,9 @@ The config folder contains single file config.json that contains required inform
 * ScalarmCertificatePath - path to custom certificate (optional, by default looking in standard certificate directory)
 * ScalarmScheme - http or https (default)
 * InsecureSSL - should invalid certificates (eg. self-signed) be accepted
+* ProbeFrequencySecs (optional, default: 10) - number of delay in seconds between getting records and checking their state if last check was completed
+* ExitTimeout (optional, default: 0) - number of seconds to wait before exiting if there are no more records available; if this value is greater than 0, the minimal time to exit is ProbeFrequencySecs; if this values is less than 0, process continues work indefinitely (use with caution!)
+* VerboseMode - should more detailed logs be shown
 
 Example config:
 
@@ -55,12 +58,15 @@ Example config:
 	],
 	"ScalarmCertificatePath" : "cert.pem",
 	"ScalarmScheme" : "https",
-	"InsecureSSL" : true
+	"InsecureSSL" : true,
+	"ProbeFrequencySecs": 10,
+	"ExitTimeout": 0,
+	"VerboseMode": false
 }
 ```
 Example config can be found in config/config.json.
 
 Run 
 ---- 
-Before running program you have to copy contents of config folder to folder with executable of monitoring. By default it will be $GOPATH/bin 
+Before running program you have to copy contents of config folder to folder with executable file of Scalarm Workers Manager. By default it will be $GOPATH/bin 
 

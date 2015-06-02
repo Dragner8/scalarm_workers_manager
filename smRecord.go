@@ -1,33 +1,50 @@
 package main
 
-import "fmt"
+import (
+	"bytes"
 
-type Sm_record struct {
-	Id                  string `json:"_id"` //id scalarmowe				do identyfikacji rekordu przy PUTach
-	Sm_uuid             string //id do autentykacji (z nazwy pliku .sh)	do nazwy plików i katalogów
-	State               string //aktualny stan sm						do decydowania
-	Resource_status     string //stan zasobu							do updatowania
-	Cmd_to_execute      string //akcja do wykonania						do wykonania
-	Cmd_to_execute_code string //nazwa akcji do wykonania				do parsowania wyjścia z wykonania
-	Error_log           string //wynik polecenia get_log				do updatowania po "get_log"
-	Job_id              string //id dla grid							do sprawdzania stanu
-	Pid                 string //id dla private machine					do sprawdzania stanu
-	Vm_id               string //id dla cloud							do sprawdzania stanu
-	Res_id              string //id zadania w systemie kolejkowym		do sprawdzania stanu						??????
+	"github.com/scalarm/scalarm_workers_manager/logger"
+)
+
+type SMRecord struct {
+	ID               string `json:"_id"`
+	SMUUID           string `json:"sm_uuid"`
+	State            string `json:"state"`
+	ResourceStatus   string `json:"resource_status"`
+	CmdToExecute     string `json:"cmd_to_execute"`
+	CmdToExecuteCode string `json:"cmd_to_execute_code"`
+	ErrorLog         string `json:"error_log"`
+	Name             string `json:"name"`
+	JobID            string `json:"job_id"`
+	PID              string `json:"pid"`
+	VMID             string `json:"vm_id"`
+	ResID            string `json:"res_id"`
 }
 
-func (sm Sm_record) Print() {
-	fmt.Println(
-		"\n\t_id				\t " + sm.Id +
-			"\n\tsm_uuid			\t " + sm.Sm_uuid +
-			"\n\tstate				\t " + sm.State +
-			"\n\tresource_status	\t " + sm.Resource_status +
-			"\n\tcmd_to_execute		\t " + sm.Cmd_to_execute +
-			"\n\tcmd_to_execute_code\t " + sm.Cmd_to_execute_code +
-			"\n\terror_log			\t " + sm.Error_log +
-			"\n\tjob_id				\t " + sm.Job_id +
-			"\n\tpid				\t " + sm.Pid +
-			"\n\tvm_id				\t " + sm.Vm_id +
-			"\n\tres_id				\t " + sm.Res_id +
-			"\n-----------------")
+func (smRecord SMRecord) Print() {
+	logger.Debug("sm_record contents:")
+	logger.Debug("\t_id                 %v", smRecord.ID)
+	logger.Debug("\tsm_uuid             %v", smRecord.SMUUID)
+	logger.Debug("\tstate               %v", smRecord.State)
+	logger.Debug("\tresource_status     %v", smRecord.ResourceStatus)
+	logger.Debug("\tcmd_to_execute      %v", smRecord.CmdToExecute)
+	logger.Debug("\tcmd_to_execute_code %v", smRecord.CmdToExecuteCode)
+	logger.Debug("\terror_log           %v", smRecord.ErrorLog)
+	logger.Debug("\tname                %v", smRecord.Name)
+	logger.Debug("\tjob_id              %v", smRecord.JobID)
+	logger.Debug("\tpid                 %v", smRecord.PID)
+	logger.Debug("\tvm_id               %v", smRecord.VMID)
+	logger.Debug("\tres_id              %v", smRecord.ResID)
+}
+
+func (smRecord SMRecord) GetIDs() string {
+	var buffer bytes.Buffer
+
+	buffer.WriteString("[")
+	buffer.WriteString(smRecord.ID)
+	buffer.WriteString("] [")
+	buffer.WriteString(smRecord.Name)
+	buffer.WriteString("]")
+
+	return buffer.String()
 }

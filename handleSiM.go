@@ -66,8 +66,14 @@ func HandleSiM(facade IInfrastructureFacade, smRecord *SMRecord, infrastructure 
 		stringOutput, _ := execute(ids, smRecord.CmdToExecute)
 		smRecord.ErrorLog = stringOutput
 
+	} else {
+		// no action was performed, so reourceStatus should not change
+		smRecord.ResourceStatus = resourceStatus
+		return nil
 	}
 
-	smRecord.ResourceStatus = resourceStatus
+	// an action was performed, so resourceStatus could change
+	// set "to_check" flag to indicate need for status check again 
+	smRecord.ResourceStatus = "to_check"
 	return nil
 }

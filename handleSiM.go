@@ -6,6 +6,10 @@ import (
 	"github.com/scalarm/scalarm_workers_manager/logger"
 )
 
+// This function checks if some actions should be invoked based in smRecord information
+// It can modify smRecord, in particular: CmdToExecute, CmdToExecuteCode and ResourceStatus
+// Notice: This function can set "to_check" ResourceStatus, which is invalid state
+// If "to_check" is set, smRecord.ResourceStatus must be set externally
 func HandleSiM(facade IInfrastructureFacade, smRecord *SMRecord, infrastructure string, emc *EMConnector, statusArray []string) error {
 	var err error
 

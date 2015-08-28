@@ -12,6 +12,7 @@ import (
 const DEFAULT_PROBE_FREQ_SECS int = 10
 
 func main() {
+	// TODO: true versioning (SCAL-937)
 	logger.Info("ScalarmWorkersManager 15.06")
 	
 	//set config file name
@@ -145,7 +146,8 @@ func main() {
 					smRecord.ErrorLog = statusError.Error()
 				} else {
 					//handle SiM
-					err = HandleSiM(infrastructureFacades[infrastructure.Name], &smRecord, infrastructure.Name, emc, statusArray)
+					facade := infrastructureFacades[infrastructure.Name]
+					err = HandleSiM(facade, &smRecord, infrastructure.Name, emc, statusArray)
 					if err != nil {
 						smRecord.ErrorLog = err.Error()
 						smRecord.ResourceStatus = "error"
@@ -157,11 +159,13 @@ func main() {
 						if statusError != nil {
 							logger.Info("Cannot get status for %v infrastructure", infrastructure.Name)
 						}
-						resourceStatus, err := facade.ResourceStatus(statusArray, smRecord)
+						resourceStatus, err := facade.ResourceStatus(statusArray, &smRecord)
 						if err != nil {
-							return err
+							smRecord.ErrorLog = err.Error()
+							smRecord.ResourceStatus = "error"
+						} else {
+							smRecord.ResourceStatus = resourceStatus
 						}
-						smRecord.ResourceStatus = resourceStatus
 					}
 				}
 

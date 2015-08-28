@@ -12,7 +12,8 @@ import (
 const DEFAULT_PROBE_FREQ_SECS int = 10
 
 func main() {
-
+	logger.Info("ScalarmWorkersManager 15.06")
+	
 	//set config file name
 	var configFile string = "config.json"
 	if len(os.Args) == 2 {
@@ -148,6 +149,19 @@ func main() {
 					if err != nil {
 						smRecord.ErrorLog = err.Error()
 						smRecord.ResourceStatus = "error"
+					}
+					// ResourceStatus can be marked to_check after infrastructure action
+					if smRecord.ResourceStatus == "to_check" {
+						// refresh statusArray
+						statusArray, statusError = infrastructureFacades[infrastructure.Name].StatusCheck()
+						if statusError != nil {
+							logger.Info("Cannot get status for %v infrastructure", infrastructure.Name)
+						}
+						resourceStatus, err := facade.ResourceStatus(statusArray, smRecord)
+						if err != nil {
+							return err
+						}
+						smRecord.ResourceStatus = resourceStatus
 					}
 				}
 

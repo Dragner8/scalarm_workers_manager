@@ -13,8 +13,8 @@ const DEFAULT_PROBE_FREQ_SECS int = 10
 
 func main() {
 	// TODO: true versioning (SCAL-937)
-	logger.Info("ScalarmWorkersManager 15.06-dev-20150831-1")
-	
+	logger.Info("ScalarmWorkersManager 15.06-dev-20150903-1")
+
 	//set config file name
 	var configFile string = "config.json"
 	if len(os.Args) == 2 {
@@ -118,7 +118,7 @@ func main() {
 			}
 
 			var activeSmRecords []SMRecord
-			
+
 			for _, smRecord := range smRecords {
 				if smRecord.State == "error" {
 					if smRecord.CmdToExecuteCode != "" {
@@ -128,9 +128,9 @@ func main() {
 					activeSmRecords = append(activeSmRecords, smRecord)
 				}
 			}
-			
+
 			smRecords = activeSmRecords
-			
+
 			logger.Info("[%v] %v sm_records", infrastructure.Name, len(smRecords))
 			if len(smRecords) > 0 {
 				logger.Debug("\tScalarm ID               Name")

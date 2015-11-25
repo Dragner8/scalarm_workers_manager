@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/scalarm/scalarm_workers_manager/logger"
@@ -36,7 +37,13 @@ func (pmf PrivateMachineFacade) PrepareResource(ids, command string) (string, er
 		return "", fmt.Errorf(stringOutput)
 	}
 
-	return strings.Trim(stringOutput, " \t\n"), nil
+	splitOutput := strings.Split(strings.Trim(stringOutput, " \t\n"), "\n")
+	matches := regexp.MustCompile(`\d+`).FindAllString(splitOutput[len(splitOutput)-1], -1)
+	if len(matches) == 0 {
+		return "", fmt.Errorf(stringOutput)
+	}
+
+	return matches[len(matches)-1], nil
 }
 
 func (pmf PrivateMachineFacade) ExtractSiMFiles(smRecord *SMRecord) error {

@@ -188,7 +188,7 @@ func main() {
 				if smRecordOld != smRecord {
 					if _, err = RepetitiveCaller(
 						func() (interface{}, error) {
-							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure.Name)
+							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure.GetInfrastructureId())
 						},
 						nil,
 						"NotifyStateChange",

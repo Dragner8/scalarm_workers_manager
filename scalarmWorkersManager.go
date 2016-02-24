@@ -145,7 +145,7 @@ func main() {
 			}
 
 			//check status
-			statusArray, statusError = infrastructureFacades[infrastructure.Name].StatusCheck()
+			statusArray, statusError = infrastructureFacades[infrastructure.GetInfrastructureName()].StatusCheck()
 			if statusError != nil {
 				logger.Info("Cannot get status for %v infrastructure", infrastructure.Name)
 			}
@@ -160,8 +160,9 @@ func main() {
 					smRecord.ErrorLog = statusError.Error()
 				} else {
 					//handle SiM
-					facade := infrastructureFacades[infrastructure.Name]
-					err = HandleSiM(facade, &smRecord, infrastructure.Name, emc, statusArray)
+
+					facade := infrastructureFacades[infrastructure.GetInfrastructureName()]
+					err = HandleSiM(facade, &smRecord, infrastructure.GetInfrastructureId(), emc, statusArray)
 					if err != nil {
 						smRecord.ErrorLog = err.Error()
 						smRecord.ResourceStatus = "error"
@@ -169,7 +170,7 @@ func main() {
 					// ResourceStatus can be marked to_check after infrastructure action
 					if smRecord.ResourceStatus == "to_check" {
 						// refresh statusArray
-						statusArray, statusError = infrastructureFacades[infrastructure.Name].StatusCheck()
+						statusArray, statusError = infrastructureFacades[infrastructure.GetInfrastructureName()].StatusCheck()
 						if statusError != nil {
 							logger.Info("Cannot get status for %v infrastructure", infrastructure.Name)
 						}

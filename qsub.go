@@ -7,6 +7,7 @@ import (
 )
 
 type QsubFacade struct {
+	Shell 	ShellExecutor
 	PLGridFacade
 }
 
@@ -15,7 +16,7 @@ type QsubFacade struct {
 func (qf QsubFacade) StatusCheck() ([]string, error) {
 	command := `qstat -u $USER`
 
-	stringOutput, err := execute("[qsub]", command)
+	stringOutput, err := qf.Shell.execute("[qsub]", command)
 	if err != nil {
 		return nil, fmt.Errorf(stringOutput)
 	}
@@ -27,7 +28,7 @@ func (qf QsubFacade) StatusCheck() ([]string, error) {
 //executes command, extracts resource ID
 //returns new job ID
 func (qf QsubFacade) PrepareResource(ids, command string) (string, error) {
-	stringOutput, err := execute(ids, command)
+	stringOutput, err := qf.Shell.execute(ids, command)
 	if err != nil {
 		return "", fmt.Errorf(stringOutput)
 	}

@@ -59,7 +59,11 @@ func (qf SlurmFacade) ResourceStatus(statusArray []string, smRecord *SMRecord) (
 
 			for _, statusLineToken := range strings.Fields(status) {
 				switch statusLineToken {
-					case "PENDING":
+					case "PENDING" :
+						{
+							res = "initializing"
+						}
+					case "PD":
 						{
 							res = "initializing"
 						}
@@ -67,7 +71,15 @@ func (qf SlurmFacade) ResourceStatus(statusArray []string, smRecord *SMRecord) (
 						{
 							res = "initializing"
 						}
+					case "CF":
+						{
+							res = "initializing"
+						}
 					case "RUNNING":
+						{
+							res = "running_sm"
+						}
+					case "R":
 						{
 							res = "running_sm"
 						}
@@ -75,7 +87,19 @@ func (qf SlurmFacade) ResourceStatus(statusArray []string, smRecord *SMRecord) (
 						{
 							res = "released"
 						}
+					case "CG":
+						{
+							res = "released"
+						}
 					case "COMPLETED":
+						{
+							res = "released"
+						}
+					case "CD":
+						{
+							res = "released"
+						}
+					case "CA":
 						{
 							res = "released"
 						}
@@ -87,7 +111,15 @@ func (qf SlurmFacade) ResourceStatus(statusArray []string, smRecord *SMRecord) (
 						{
 							res = "error"
 						}
+					case "F":
+						{
+							res = "error"
+						}
 					case "NODE_FAIL":
+						{
+							res = "error"
+						}
+					case "NF":
 						{
 							res = "error"
 						}
@@ -95,11 +127,23 @@ func (qf SlurmFacade) ResourceStatus(statusArray []string, smRecord *SMRecord) (
 						{
 							res = "error"
 						}
+					case "PR":
+						{
+							res = "error"
+						}
 					case "SUSPENDED":
 						{
 							res = "error"
 						}
+					case "S":
+						{
+							res = "error"
+						}
 					case "TIMEOUT":
+						{
+							res = "error"
+						}
+					case "TO":
 						{
 							res = "error"
 						}

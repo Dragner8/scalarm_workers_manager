@@ -41,6 +41,8 @@ func HandleSiM(facade IInfrastructureFacade, smRecord *SMRecord, infrastructure 
 	commands := strings.Split(smRecord.CmdToExecute, separator)
 
 	if len(commands) != len(commandCodes) {
+		logger.Info("commands: %v", commands)
+		logger.Info("commandCodes: %v", commandCodes)
 		return fmt.Errorf("Commands count does not match command codes count")
 	}
 

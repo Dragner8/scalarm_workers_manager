@@ -5,7 +5,7 @@ PACKAGES_DIR=packages/
 rm -rf $PACKAGES_DIR/*
 
 for OS in linux; do
-    for ARCH in amd64 386; do
+    for ARCH in amd64; do
         BIN_PATH="$PACKAGES_DIR/${OS}_${ARCH}/scalarm_monitoring"
         echo "Building: $OS $ARCH in ${BIN_PATH}..."
         GOOS=$OS GOARCH=$ARCH CGO_ENABLED=0 go build -o $BIN_PATH

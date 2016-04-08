@@ -78,8 +78,9 @@ type EMJsonResponse struct {
 func (emc *EMConnector) GetSimulationManagerRecords(infrastructure Infrastructure) ([]SMRecord, error) {
 	urlString := fmt.Sprintf("%v://%v/simulation_managers?", emc.scheme, emc.experimentManagerAddress())
 	params := url.Values{}
-	params.Add("infrastructure", infrastructure.Name)
-	params.Add("states_not", "error")
+	params.Add("infrastructure", infrastructure.GetInfrastructureId())
+	// disabled due to SCAL-943
+	// params.Add("states_not", "error")
 	params.Add("onsite_monitoring", "true")
 	if infrastructure.Name == "private_machine" {
 		params.Add("credentials_id", infrastructure.CredentialsID)

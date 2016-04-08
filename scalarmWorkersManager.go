@@ -12,6 +12,8 @@ import (
 const DEFAULT_PROBE_FREQ_SECS int = 10
 
 func main() {
+	// TODO: true versioning (SCAL-937)
+	logger.Info("ScalarmWorkersManager 2016.04.08-1")
 
 	//set config file name
 	var configFile string = "config.json"
@@ -115,6 +117,20 @@ func main() {
 				smRecords = smRecordsRaw.([]SMRecord)
 			}
 
+			var activeSmRecords []SMRecord
+
+			for _, smRecord := range smRecords {
+				if smRecord.State == "error" {
+					if smRecord.CmdToExecuteCode != "" {
+						activeSmRecords = append(activeSmRecords, smRecord)
+					}
+				} else {
+					activeSmRecords = append(activeSmRecords, smRecord)
+				}
+			}
+
+			smRecords = activeSmRecords
+
 			logger.Info("[%v] %v sm_records", infrastructure.Name, len(smRecords))
 			if len(smRecords) > 0 {
 				logger.Debug("\tScalarm ID               Name")
@@ -129,7 +145,7 @@ func main() {
 			}
 
 			//check status
-			statusArray, statusError = infrastructureFacades[infrastructure.Name].StatusCheck()
+			statusArray, statusError = infrastructureFacades[infrastructure.GetInfrastructureName()].StatusCheck()
 			if statusError != nil {
 				logger.Info("Cannot get status for %v infrastructure", infrastructure.Name)
 			}
@@ -144,10 +160,27 @@ func main() {
 					smRecord.ErrorLog = statusError.Error()
 				} else {
 					//handle SiM
-					err = HandleSiM(infrastructureFacades[infrastructure.Name], &smRecord, infrastructure.Name, emc, statusArray)
+
+					facade := infrastructureFacades[infrastructure.GetInfrastructureName()]
+					err = HandleSiM(facade, &smRecord, infrastructure.GetInfrastructureId(), emc, statusArray)
 					if err != nil {
 						smRecord.ErrorLog = err.Error()
 						smRecord.ResourceStatus = "error"
+					}
+					// ResourceStatus can be marked to_check after infrastructure action
+					if smRecord.ResourceStatus == "to_check" {
+						// refresh statusArray
+						statusArray, statusError = infrastructureFacades[infrastructure.GetInfrastructureName()].StatusCheck()
+						if statusError != nil {
+							logger.Info("Cannot get status for %v infrastructure", infrastructure.Name)
+						}
+						resourceStatus, err := facade.ResourceStatus(statusArray, &smRecord)
+						if err != nil {
+							smRecord.ErrorLog = err.Error()
+							smRecord.ResourceStatus = "error"
+						} else {
+							smRecord.ResourceStatus = resourceStatus
+						}
 					}
 				}
 
@@ -155,7 +188,7 @@ func main() {
 				if smRecordOld != smRecord {
 					if _, err = RepetitiveCaller(
 						func() (interface{}, error) {
-							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure.Name)
+							return nil, emc.NotifyStateChange(&smRecord, &smRecordOld, infrastructure.GetInfrastructureId())
 						},
 						nil,
 						"NotifyStateChange",

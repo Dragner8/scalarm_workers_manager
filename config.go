@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type ConfigData struct {
@@ -22,6 +23,24 @@ type ConfigData struct {
 type Infrastructure struct {
 	Name          string `json:"name"`
 	CredentialsID string `json:"credentials_id"`
+}
+
+func (f Infrastructure) GetInfrastructureName() string {
+	splitName := strings.Split(f.Name, ".")
+	if len(splitName) == 2 {
+		return splitName[1]
+	} else {
+		return f.Name
+	}
+}
+
+func (f Infrastructure) GetInfrastructureId() string {
+	splitName := strings.Split(f.Name, ".")
+	if len(splitName) == 2 {
+		return splitName[0]
+	} else {
+		return f.Name
+	}
 }
 
 func ReadConfiguration(configFile string) (*ConfigData, error) {

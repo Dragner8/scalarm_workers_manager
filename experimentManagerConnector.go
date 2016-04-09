@@ -178,13 +178,13 @@ func sm_record_marshal(smRecord, smRecordOld *SMRecord) string {
 
 	inner_sm_record_marshal(smRecord.Name, smRecordOld.Name, "name", &comma, &parameters)
 
-	inner_sm_record_marshal(smRecord.JobID, smRecordOld.JobID, "job_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.JobID, smRecordOld.JobID, "job_identifier", &comma, &parameters)
 
 	inner_sm_record_marshal(smRecord.PID, smRecordOld.PID, "pid", &comma, &parameters)
 
-	inner_sm_record_marshal(smRecord.VMID, smRecordOld.VMID, "vm_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.VMID, smRecordOld.VMID, "vm_identifier", &comma, &parameters)
 
-	inner_sm_record_marshal(smRecord.ResID, smRecordOld.ResID, "res_id", &comma, &parameters)
+	inner_sm_record_marshal(smRecord.ResID, smRecordOld.ResID, "res_identifier", &comma, &parameters)
 
 	parameters.WriteString("}")
 

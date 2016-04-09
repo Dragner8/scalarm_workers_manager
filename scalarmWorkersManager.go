@@ -13,7 +13,7 @@ const DEFAULT_PROBE_FREQ_SECS int = 10
 
 func main() {
 	// TODO: true versioning (SCAL-937)
-	logger.Info("ScalarmWorkersManager 2016.04.08-1")
+	logger.Info("ScalarmWorkersManager 2016.04.09-1")
 
 	//set config file name
 	var configFile string = "config.json"

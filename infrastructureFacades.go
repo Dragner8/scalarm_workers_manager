@@ -11,6 +11,7 @@ type IInfrastructureFacade interface {
 func NewInfrastructureFacades() map[string]IInfrastructureFacade {
 	return map[string]IInfrastructureFacade{
 		"qsub":            QsubFacade{BashExecutor{}, PLGridFacade{}},
+		"pbs":             QsubFacade{BashExecutor{}, PLGridFacade{}},
 		"qcg":             QcgFacade{PLGridFacade{}},
 		"private_machine": PrivateMachineFacade{},
 		"slurm":           SlurmFacade{BashExecutor{}, PLGridFacade{}},

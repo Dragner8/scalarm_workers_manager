@@ -3,7 +3,6 @@ package main
 import "testing"
 import "strings"
 import "errors"
-import "fmt"
 
 type SlurmFakeBashExecutor struct {
 
@@ -37,7 +36,6 @@ blablalba
 }
 
 func TestSlurmStatusCheck(t *testing.T) {
-  fmt.Println("Running TestSlurmStatusCheck")
   facade := SlurmFacade{SlurmFakeBashExecutor{}, PLGridFacade{}}
 
   statusArray, _ := facade.StatusCheck()
@@ -63,7 +61,6 @@ func TestSlurmStatusCheck(t *testing.T) {
 }
 
 func TestSlurmResourceStatusOfARunningWorker(t *testing.T) {
-  fmt.Println("Running TestSlurmResourceStatusOfARunningWorker")
   facade := SlurmFacade{SlurmFakeBashExecutor{}, PLGridFacade{}}
   statusArray := []string{
     "",
@@ -86,7 +83,6 @@ func TestSlurmResourceStatusOfARunningWorker(t *testing.T) {
 }
 
 func TestSlurmResourceStatusOfANewWorker(t *testing.T) {
-  fmt.Println("Running TestSlurmResourceStatusOfANewWorker")
   facade := SlurmFacade{SlurmFakeBashExecutor{}, PLGridFacade{}}
   statusArray := []string{}
   smRecord := new(SMRecord)
@@ -101,7 +97,6 @@ func TestSlurmResourceStatusOfANewWorker(t *testing.T) {
 }
 
 func TestSlurmPrepareResource(t *testing.T) {
-  fmt.Println("Running TestSlurmPrepareResource")
   facade := SlurmFacade{SlurmFakeBashExecutor{}, PLGridFacade{}}
   jobId, _ := facade.PrepareResource("ids", "bash sbatch whatever")
 

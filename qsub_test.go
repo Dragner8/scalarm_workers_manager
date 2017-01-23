@@ -1,11 +1,8 @@
 package main
 
 import "testing"
-import "fmt"
 
-type FakeBashExecutor struct {
-
-}
+type FakeBashExecutor struct { }
 
 func (FakeBashExecutor) executeSilent(command string) (string, error) {
   return `
@@ -26,7 +23,6 @@ Job ID               Username    Queue    Jobname          SessID NDS   TSK    M
 }
 
 func TestQsubStatusCheck(t *testing.T) {
-  fmt.Println("Running TestQsubStatusCheck")
   facade := QsubFacade{FakeBashExecutor{}, PLGridFacade{}}
 
   statusArray, _ := facade.StatusCheck()
@@ -52,7 +48,6 @@ func TestQsubStatusCheck(t *testing.T) {
 }
 
 func TestResourceStatusOfARunningWorker(t *testing.T) {
-  fmt.Println("Running TestResourceStatusOfARunningWorker")
   facade := QsubFacade{FakeBashExecutor{}, PLGridFacade{}}
   statusArray := []string{
     "",
@@ -75,7 +70,6 @@ func TestResourceStatusOfARunningWorker(t *testing.T) {
 }
 
 func TestResourceStatusOfANewWorker(t *testing.T) {
-  fmt.Println("Running TestResourceStatusOfANewWorker")
   facade := QsubFacade{FakeBashExecutor{}, PLGridFacade{}}
   statusArray := []string{}
   smRecord := new(SMRecord)

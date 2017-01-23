@@ -82,11 +82,23 @@ func GroupSimsByExperiment(records []SMRecord) map[string][]SMRecord {
 	return groupedSims
 }
 
-func FilterStartingSims(records []SMRecord, resourceStatus string) []SMRecord {
+func SelectStartingSims(records []SMRecord, resourceStatus string) []SMRecord {
 	filteredRecords := make([]SMRecord, 0)
 
 	for _, record := range records {
 		if record.IsAboutToStart(resourceStatus) {
+			filteredRecords = append(filteredRecords, record)
+		}
+	}
+
+	return filteredRecords
+}
+
+func RemoveStartingSims(records []SMRecord, resourceStatus string) []SMRecord {
+	filteredRecords := make([]SMRecord, 0)
+
+	for _, record := range records {
+		if !record.IsAboutToStart(resourceStatus) {
 			filteredRecords = append(filteredRecords, record)
 		}
 	}

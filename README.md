@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Dragner8/scalarm_workers_manager.svg?branch=master)](https://travis-ci.org/Dragner8/scalarm_workers_manager)
+
 Scalarm Workers Manager
 ============ 
 

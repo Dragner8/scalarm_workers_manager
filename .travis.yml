@@ -2,14 +2,20 @@ sudo: required
 
 services:
   - docker
+  
+# when tests will work
+#language: go
+#go:
+#- x.x.x #current go version
 
 script:
-  - export REPO=scalarm/scalarm-simulation-manager
+  - export REPO=scalarm/scalarm_workers_manager
   - docker build . -f Dockerfile -t $REPO 
-  - docker tag $REPO $REPO:experiment_manager-$TRAVIS_TAG
+ 
 
 before_deploy:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS	
+  - docker tag $REPO $REPO:$TRAVIS_TAG
 
 deploy:
   - provider: script
@@ -21,6 +27,6 @@ deploy:
 
 env:
   global:
-    - secure: "HxqAslatmhx3V1gtlVZR/M+D1AuutyuUSyeP7Fuscp1sy0zeFnSnOQCvd2Eu+cc5UNq/0kHciQBgPkjupP6pxiPxAuaKnjCbA87ANhbMmSDDiPuzz0cQJu+mDB2KjbaLYbgrHe0V0apXmc8O6o2pmDSyP66Jnf4pnUc+eISE1ms46a9rh2osbar2sbnx0jhuybuIzxnrR2iVef3qgPHkSQa/t6pZ9IOYstNnJO9/K+oFChl8j8DkibpuRgv8om1narb2OaEkbnAp/oV2N/8NvKcFrP1oxsHRd3+4IrNqsllCpphX63PTxusmdpzs1rQrrr/dknCsyOPIqj4bcTrlChf83hml88prKi4qcseD+YVgAJ6ywIn+TkXMjv91w0f9EEOrmSMIA0uRDQB80CW8v0Nm0bwGPfBzII23ASD8fHN9OpNO9HJw+v/UU1KsKCATFvkxDUAGBhnhWv+/i+p5KTMBldKpKDk0mTjgnDhdvtKQN5CIrHC89zT5+PMr31YaVOpQbErXGcRQb19W8OAVOVCuBF8SxrO0/5Y2ktNWmq5hkHQnCgNJilU7eOQSN8PRv0SUO8yX+PIMVHg9hfW5zYxBpHbNUQmJNqy7h6AFm4wQKpJDqFToJKzSnZBgg3vuFWegYRtsc5tuYaGwro38M2O9S5Bh8q7zokWILRfNfjQ="
-    - secure: "PtTEBamgEevk6M/U1vXuMqbUPb1/UNhenthJnRv+Ql4YmlNOrJLM4AdEAgn+64KydUkqsahXRdudlUy5AzMbt7Pq+1wBP16Y91W3yUkWCajlVF90Co7+nEgqEij054mmc8CsgC23Ta5Rz17eSLOYRN31TP/qf8Iam5TnUZIxgD1lW9BiFOoE9FG3xCy980VNKLuth2JdrDnswHf+1RRTOGSo8DKSHgv3IililJs3uPz+WpLDox4UC0nZRT/S9j+NU+iAN2JwXPYif7KKw5tatWrAM6z+L+lGfpMcXaWWPmRNOHOSb3Sc2MkS84hZWRJaiVCl+J2xSv115q0ptigESV3hNaB/a2CUc5zq3bNbpBg/YR7IR9iTL5tNc041CZq+OIu91f/Uth3uu78LHSqWJiEBuU5t3X3S4MZM1iy2YAzTgt8CYN7QNcTQUmpuUr8DED0ng3qxbUU+X5XBDrvi6ct3L6Sn0cqcU0kleIK8ksQZ+GNHEWhS8KW1GH4SW0YoHvFIQmyhqmb6kByJV84lvdgJ6aHiZjvkznEaeYf6BlpSFqxQLgBYbYDGelwbe/OfcuBcpc/u7JmxelndnTgfypa5uEDMXOmNaasOqh2twY/wQpSVw0YvYZS9HK6l9kXz+n64zoO8P9nsbB+wxMQfOY0MrKmOR6Kye7s4uyWCMNs="
-
+    - secure: "XbLl46JOfBy12XzZTaZ6A+bRl33957iemQWFC4kkVyeAup0KggmkIYfA4SGpFn+q+9/bCa5ubnkIm0qhlvWGA1dr8ZVTiZLjNDGDdiFO1WSoq325O6kobplOheAzdjFuQ514d6GjlHoihkDui+JgMb3aUQ3Q7o5UB3/GrgVyNYQYFchfIz01ETbop0Kt53SqgsetrVGeetJDfm6j82dSzv4ID9fb5LAGLR0xidOMSpKg+lP81CVlx7KPYZV0ndJ9xvxpbynQ0xPjmLr743GooQnFiDfhRTtHz0bDumc/ogd8nEsbzWcu592+zGDLydWKgTk9E26We2Bjygl9+bf05snvbRd1C8G1wAPvHjn2vTbJlufG8GbGNELJHOD0kuj7CTOVaj9/NT4FS3dpk0YGSSpnik18qP+UmES7mY3cxQWXDzn90ywtlNgK90P+3g10VVoQRi8Y5MeQIO+kdMhjtYzCFNjvuKrWmWWmlwcAFKdooU0UpSZDvq81N8XzSHbtS6l/vIwxsQzYCCVLe8lE6mPOkf5SWtEvaNBxn7qLj9uH4GX/F8Jf5d9ZMT51/8oHzoDfjo7Iy7OeDf09XV4Oe/e0SR3QCR13Xll0wiIlp4Was4M3gm65CQckFLUKeIquUu3SrJGgPaRWabb82u32JOES880GQ/2QZ7TPXzJmlWo="
+    - secure: "V+x/DMod3jemBKnw6jbTw2ylQL1igUso9B+Er9ImNp1FxaPUD2z2uvyImDil+6J9O1TFgNEXo3ZF51SRji5MfO0ZOCCK7hgDdiKYJU7PxaIaIwMTutzhnvI2dwBtz/k05NwCLTI/yGpSBfk8fnpeZmTL1uVaGdm+cdTkma+D4UhMUCRUTwx2ZbUY+4f0pKFG6LfyXetE7ZWiCID0oc4LCBi0W999IdZR/JHDSTPAhBA0Rxn+fimWNb7WcB4pqhzkLUMRLgPL7atRLyi6/M/D9IGsO/upZQHMrhhmv0TqLSHtU45JS4c9/hyIQlsB728UwmaLJBLcfqagptC4CZfubbEkPHPOJz4wOk/rimo87Z5gYZrgCf3pJ1alvmWrbmi4mSedwweS+Ctl/tGdyWpYC13YCVQR/3pSO1XUqnb3fQYwNGnFfP0FTkaemsJ2EysneXckGccRNPuQh3+v42b9a7HYQ9XOCtpjotjSKpgC5PPjAF+nL9CFX9zltiwSzmpX9tJeWFM5Zt3wIMU8xcnh9cchi4YTDsNhUT8vB8eG+tinj4irXwSm/HzK9rxia9vdL+X7qCo9UIxG5yeUJvy4AgJTm/oVQTW12t2YzSFA9EYroFvrD1pYnbGKlz0ugYNf/IT1V/TC+dVaQzlZOclqjlDWFU0LTk/4kg4h/ltLUAM="
+  

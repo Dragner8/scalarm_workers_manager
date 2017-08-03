@@ -2,14 +2,20 @@ sudo: required
 
 services:
   - docker
+  
+# when tests will work
+#language: ruby
+#rvm:
+#  - 2.3
 
 script:
-  - export REPO=scalarm/scalarm-simulation-manager
+  - export REPO=scalarm/scalarm_workers_manager
   - docker build . -f Dockerfile -t $REPO 
-  - docker tag $REPO $REPO:experiment_manager-$TRAVIS_TAG
+ 
 
 before_deploy:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS	
+  - docker tag $REPO $REPO:$TRAVIS_TAG
 
 deploy:
   - provider: script

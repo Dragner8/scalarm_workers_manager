@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Dragner8/scalarm_workers_manager.svg?branch=master)](https://travis-ci.org/Dragner8/scalarm_workers_manager)
+[![Build Status](https://travis-ci.org/Dragner8/scalarm_workers_manager.svg?branch=master)](https://travis-ci.org/Dragner8/scalarm_workers_manager)   [![Codacy Badge](https://api.codacy.com/project/badge/Grade/cdb30f2077894dd7953060f443a009ec)](https://www.codacy.com/app/Dragner8/scalarm_workers_manager?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Dragner8/scalarm_workers_manager&amp;utm_campaign=Badge_Grade)
 
 Scalarm Workers Manager
 ============ 

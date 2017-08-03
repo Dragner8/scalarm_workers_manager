@@ -4,9 +4,9 @@ services:
   - docker
   
 # when tests will work
-#language: ruby
-#rvm:
-#  - 2.3
+#language: go
+#go:
+#- x.x.x #current go version
 
 script:
   - export REPO=scalarm/scalarm_workers_manager
